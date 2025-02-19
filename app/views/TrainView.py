@@ -401,8 +401,6 @@ def api_postTaskStartTrain(request):
 
         train_code = params.get("train_code", "").strip()
         try:
-            if not f_checkAuth():
-                raise Exception("请先到【系统功能/系统授权】获取授权！")
 
             train = TaskTrain.objects.filter(code=train_code)
             if len(train) > 0:
