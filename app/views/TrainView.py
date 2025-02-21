@@ -592,3 +592,24 @@ def api_getTrainLog(request):
         "log_lines": log_lines
     }
     return HttpResponseJson(res)
+
+
+def __checkTrainThread():
+    i = 0
+    mTrainUtils = TrainUtils(g_logger)
+    while True:
+        i += 1
+        trains = TaskTrain.objects.filter(train_state=1)
+        if len(trains) > 0:
+            for train in trains:
+                if not mTrainUtils.checkProcessByPid(pid=train.train_pid):
+                    train.train_state = 2
+                    train.train_stop_time = datetime.now()
+                    train.save()
+        # labelu
+
+        time.sleep(30)
+
+t = threading.Thread(target=__checkTrainThread,)
+t.daemon = True
+t.start()
