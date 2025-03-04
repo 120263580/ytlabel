@@ -62,6 +62,17 @@ python -m pip install -r requirements-linux.txt -i https://pypi.tuna.tsinghua.ed
 ~~~
 
 
+### Docker安装
+~~~
+//进入到xclabel目录, 构建Docker镜像
+docker build -t xclabel .
+
+//运行Docker容器
+docker run -p 9924:9924 xclabel
+
+~~~
+
+
 ### 授权协议
 
 - 本项目自有代码使用宽松的MIT协议，在保留版权信息的情况下可以自由应用于各自商用、非商业的项目。
