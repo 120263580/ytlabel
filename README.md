@@ -62,7 +62,7 @@ python -m pip install -r requirements-linux.txt -i https://pypi.tuna.tsinghua.ed
 ~~~
 
 
-### Docker安装
+### Docker 部署
 ~~~
 //进入到xclabel目录, 构建Docker镜像
 docker build -t xclabel .
