@@ -5,32 +5,27 @@ import numpy as np
 import base64
 import traceback
 import cv2
+import sys
 from urllib.parse import urlparse
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
 from PIL import Image
-from openai import OpenAI
 
-# OpenAI库用于调用DashScope API
-OPENAI_AVAILABLE = True
 
 app = Flask(__name__)
 CORS(app)
 
 # 配置
 UPLOAD_FOLDER = 'uploads'
-DATASET_FOLDER = 'datasets'
 STATIC_FOLDER = 'static'
 ANNOTATIONS_FOLDER = os.path.join(STATIC_FOLDER, 'annotations')
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['DATASET_FOLDER'] = DATASET_FOLDER
 app.config['STATIC_FOLDER'] = STATIC_FOLDER
 app.config['ANNOTATIONS_FOLDER'] = ANNOTATIONS_FOLDER
 
 # 创建必要的目录
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(DATASET_FOLDER, exist_ok=True)
 os.makedirs(STATIC_FOLDER, exist_ok=True)
 os.makedirs(ANNOTATIONS_FOLDER, exist_ok=True)
 
@@ -447,10 +442,397 @@ def ai_annotate():
     }), 400
 
 
+@app.route('/api/check-yolo11-install')
+def check_yolo11_install():
+    """检查YOLO11安装状态"""
+    import os
+    # 检查YOLO11安装路径是否存在
+    yolo11_path = os.path.join(app.root_path, 'plugins', 'yolo11')
+    is_installed = os.path.exists(yolo11_path) and os.path.isdir(yolo11_path)
+    
+    # 初始化安装信息
+    install_info = {
+        'is_installed': is_installed,
+        'install_time': '',
+        'has_cuda': False,
+        'hardware': 'CPU'
+    }
+    
+    # 如果已安装，读取详细的安装信息
+    if is_installed:
+        install_info_path = os.path.join(yolo11_path, 'install_info.json')
+        if os.path.exists(install_info_path):
+            try:
+                with open(install_info_path, 'r', encoding='utf-8') as f:
+                    saved_info = json.load(f)
+                    # 更新安装信息
+                    install_info.update(saved_info)
+            except Exception as e:
+                print(f"读取安装信息失败: {e}")
+    
+    return jsonify(install_info)
+
+
+@app.route('/api/install-yolo11')
+def install_yolo11():
+    """安装YOLO11"""
+    import os
+    import subprocess
+    import time
+    import datetime
+    import venv
+    from flask import Response
+    
+    # 获取安装路径
+    install_path = request.args.get('install_path', 'plugins/yolo11')
+    # 确保安装路径是相对于项目根目录的
+    if not os.path.isabs(install_path):
+        install_path = os.path.join(app.root_path, install_path)
+    
+    def generate():
+        # 发送初始状态
+        yield f"data: {json.dumps({'status': 'started', 'message': '开始安装YOLO11...', 'progress': 0})}\n\n"
+        time.sleep(0.5)
+        
+        try:
+            # 1. 创建安装目录
+            yield f"data: {json.dumps({'message': '创建安装目录...', 'progress': 10})}\n\n"
+            os.makedirs(install_path, exist_ok=True)
+            time.sleep(0.5)
+            
+            # 2. 创建Python虚拟环境
+            yield f"data: {json.dumps({'message': '创建Python虚拟环境...', 'progress': 20})}\n\n"
+            
+            # 创建虚拟环境
+            venv_path = os.path.join(install_path, 'venv')
+            venv.create(venv_path, with_pip=True)
+            time.sleep(0.5)
+            
+            # 3. 安装YOLO11的依赖
+            yield f"data: {json.dumps({'message': '安装YOLO11依赖...', 'progress': 40})}\n\n"
+            
+            # 获取虚拟环境中的pip路径
+            if os.name == 'nt':  # Windows
+                pip_path = os.path.join(venv_path, 'Scripts', 'pip.exe')
+                python_path = os.path.join(venv_path, 'Scripts', 'python.exe')
+            else:  # Linux/macOS
+                pip_path = os.path.join(venv_path, 'bin', 'pip')
+                python_path = os.path.join(venv_path, 'bin', 'python')
+            
+            # 升级pip
+            result = subprocess.run(
+                [python_path, '-m', 'pip', 'install', '--upgrade', 'pip'],
+                capture_output=True,
+                text=True,
+                cwd=install_path
+            )
+            
+            if result.returncode != 0:
+                yield f"data: {json.dumps({'status': 'error', 'message': f'升级pip失败: {result.stderr}', 'progress': 40})}\n\n"
+                return
+            
+            # 安装ultralytics
+            result = subprocess.run(
+                [pip_path, 'install', 'ultralytics'],
+                capture_output=True,
+                text=True,
+                cwd=install_path
+            )
+            
+            if result.returncode != 0:
+                yield f"data: {json.dumps({'status': 'error', 'message': f'安装ultralytics失败: {result.stderr}', 'progress': 50})}\n\n"
+                return
+            
+            time.sleep(0.5)
+            
+            # 4. 检查硬件支持
+            yield f"data: {json.dumps({'message': '检查硬件支持...', 'progress': 70})}\n\n"
+            
+            # 检查是否支持CUDA
+            has_cuda = False
+            try:
+                result = subprocess.run(
+                    [python_path, '-c', 'import torch; print(torch.cuda.is_available())'],
+                    capture_output=True,
+                    text=True,
+                    cwd=install_path
+                )
+                has_cuda = result.stdout.strip().lower() == 'true'
+            except Exception as e:
+                print(f"检查CUDA支持失败: {e}")
+            
+            time.sleep(0.5)
+            
+            # 5. 创建models目录
+            yield f"data: {json.dumps({'message': '创建models目录...', 'progress': 80})}\n\n"
+            models_dir = os.path.join(install_path, 'models')
+            os.makedirs(models_dir, exist_ok=True)
+            time.sleep(0.5)
+            
+            # 6. 记录安装信息
+            yield f"data: {json.dumps({'message': '记录安装信息...', 'progress': 90})}\n\n"
+            
+            install_info = {
+                'is_installed': True,
+                'install_time': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'install_path': install_path,
+                'has_cuda': has_cuda,
+                'hardware': 'CUDA' if has_cuda else 'CPU'
+            }
+            
+            # 保存安装信息到文件
+            install_info_path = os.path.join(install_path, 'install_info.json')
+            with open(install_info_path, 'w') as f:
+                json.dump(install_info, f, indent=2, ensure_ascii=False)
+            
+            time.sleep(0.5)
+            
+            # 7. 安装完成
+            yield f"data: {json.dumps({'message': 'YOLO11安装完成！', 'progress': 100, 'status': 'completed', 'has_cuda': has_cuda})}\n\n"
+            
+        except Exception as e:
+            import traceback
+            yield f"data: {json.dumps({'status': 'error', 'message': f'安装失败: {str(e)}', 'progress': 0, 'traceback': traceback.format_exc()})}\n\n"
+    
+    return Response(generate(), mimetype='text/event-stream')
+
+
+@app.route('/api/uninstall-yolo11')
+def uninstall_yolo11():
+    """卸载YOLO11"""
+    import os
+    import shutil
+    import time
+    from flask import Response
+    
+    # 获取安装路径
+    install_path = request.args.get('install_path', 'plugins/yolo11')
+    # 确保安装路径是相对于项目根目录的
+    if not os.path.isabs(install_path):
+        install_path = os.path.join(app.root_path, install_path)
+    
+    def generate():
+        # 发送初始状态
+        yield f"data: {json.dumps({'status': 'started', 'message': '开始卸载YOLO11...', 'progress': 0})}\n\n"
+        time.sleep(0.5)
+        
+        try:
+            # 检查YOLO11是否安装
+            if not os.path.exists(install_path) or not os.path.isdir(install_path):
+                yield f"data: {json.dumps({'status': 'error', 'message': 'YOLO11未安装', 'progress': 0})}\n\n"
+                return
+            
+            # 1. 删除安装目录
+            yield f"data: {json.dumps({'message': '删除YOLO11安装目录...', 'progress': 50})}\n\n"
+            
+            # 强制删除整个YOLO11目录，包括venv文件夹
+            # 先尝试使用shutil.rmtree删除
+            shutil.rmtree(install_path, ignore_errors=False)
+            
+            # 验证是否删除成功
+            if os.path.exists(install_path):
+                # 如果shutil.rmtree失败，尝试使用os.system强制删除（针对Windows系统）
+                if os.name == 'nt':  # Windows系统
+                    os.system(f'rmdir /s /q "{install_path}"')
+                else:  # Linux/macOS系统
+                    os.system(f'rm -rf "{install_path}"')
+                
+                # 再次验证
+                if os.path.exists(install_path):
+                    raise Exception(f'无法删除目录: {install_path}')
+            
+            time.sleep(0.5)
+            
+            # 2. 卸载完成
+            yield f"data: {json.dumps({'message': 'YOLO11卸载完成！', 'progress': 100, 'status': 'completed'})}\n\n"
+            
+        except Exception as e:
+            import traceback
+            yield f"data: {json.dumps({'status': 'error', 'message': f'卸载失败: {str(e)}', 'progress': 0, 'traceback': traceback.format_exc()})}\n\n"
+    
+    return Response(generate(), mimetype='text/event-stream')
+
+
+@app.route('/api/download-models')
+def download_models():
+    """下载YOLO11预训练模型"""
+    import os
+    import subprocess
+    import time
+    from flask import Response
+    
+    # 获取模型列表和安装路径
+    models_str = request.args.get('models', '')
+    models = models_str.split(',') if models_str else []
+    install_path = request.args.get('install_path', 'plugins/yolo11')
+    
+    # 确保安装路径是相对于项目根目录的
+    if not os.path.isabs(install_path):
+        install_path = os.path.join(app.root_path, install_path)
+    
+    def generate():
+        # 发送初始状态
+        yield f"data: {json.dumps({'status': 'started', 'message': '开始下载模型...', 'progress': 0})}\n\n"
+        time.sleep(0.5)
+        
+        try:
+            # 检查YOLO11是否安装
+            if not os.path.exists(install_path) or not os.path.isdir(install_path):
+                yield f"data: {json.dumps({'status': 'error', 'message': 'YOLO11未安装', 'progress': 0})}\n\n"
+                return
+            
+            # 获取虚拟环境中的python路径
+            if os.name == 'nt':  # Windows
+                python_path = os.path.join(install_path, 'venv', 'Scripts', 'python.exe')
+            else:  # Linux/macOS
+                python_path = os.path.join(install_path, 'venv', 'bin', 'python')
+            
+            # 检查python路径是否存在
+            if not os.path.exists(python_path):
+                yield f"data: {json.dumps({'status': 'error', 'message': '虚拟环境未找到', 'progress': 0})}\n\n"
+                return
+            
+            # 创建models目录
+            models_dir = os.path.join(install_path, 'models')
+            os.makedirs(models_dir, exist_ok=True)
+            
+            # 下载每个模型
+            total_models = len(models)
+            for i, model in enumerate(models):
+                yield f"data: {json.dumps({'message': f'正在下载模型: {model}...', 'progress': int((i / total_models) * 50) + 10})}\n\n"
+                
+                # 使用ultralytics的CLI下载模型
+                result = subprocess.run(
+                    [python_path, '-c', f'from ultralytics import YOLO; YOLO("{model}.pt")'],
+                    capture_output=True,
+                    text=True,
+                    cwd=models_dir
+                )
+                
+                if result.returncode != 0:
+                    yield f"data: {json.dumps({'status': 'error', 'message': f'下载模型 {model} 失败: {result.stderr}', 'progress': 0})}\n\n"
+                    return
+                
+                time.sleep(0.5)
+            
+            # 下载完成
+            yield f"data: {json.dumps({'message': '模型下载完成！', 'progress': 100, 'status': 'completed'})}\n\n"
+            
+        except Exception as e:
+            import traceback
+            yield f"data: {json.dumps({'status': 'error', 'message': f'下载失败: {str(e)}', 'progress': 0, 'traceback': traceback.format_exc()})}\n\n"
+    
+    return Response(generate(), mimetype='text/event-stream')
+
+
+@app.route('/api/list-models')
+def list_models():
+    """获取已安装的YOLO11模型列表"""
+    import os
+    
+    # 获取安装路径
+    install_path = request.args.get('install_path', 'plugins/yolo11')
+    # 确保安装路径是相对于项目根目录的
+    if not os.path.isabs(install_path):
+        install_path = os.path.join(app.root_path, install_path)
+    
+    # 初始化模型列表
+    models = []
+    
+    # 检查YOLO11是否安装
+    if os.path.exists(install_path) and os.path.isdir(install_path):
+        # 检查models目录是否存在
+        models_dir = os.path.join(install_path, 'models')
+        if os.path.exists(models_dir) and os.path.isdir(models_dir):
+            # 列出models目录下的所有.pt文件
+            for file in os.listdir(models_dir):
+                if file.endswith('.pt'):
+                    models.append(file)
+    
+    return jsonify({'models': models})
+
+
+@app.route('/api/upload-model', methods=['POST'])
+def upload_model():
+    """上传YOLO11模型文件"""
+    import os
+    
+    # 获取安装路径
+    install_path = request.headers.get('X-Install-Path', 'plugins/yolo11')
+    # 确保安装路径是相对于项目根目录的
+    if not os.path.isabs(install_path):
+        install_path = os.path.join(app.root_path, install_path)
+    
+    # 检查YOLO11是否安装
+    if not os.path.exists(install_path) or not os.path.isdir(install_path):
+        return jsonify({'success': False, 'error': 'YOLO11未安装'})
+    
+    # 检查是否有文件上传
+    if 'files[]' not in request.files:
+        return jsonify({'success': False, 'error': '未找到上传的文件'})
+    
+    # 创建models目录
+    models_dir = os.path.join(install_path, 'models')
+    os.makedirs(models_dir, exist_ok=True)
+    
+    # 保存上传的文件
+    uploaded_files = []
+    files = request.files.getlist('files[]')
+    for file in files:
+        if file.filename != '' and file.filename.endswith('.pt'):
+            # 保存文件到models目录
+            file_path = os.path.join(models_dir, file.filename)
+            file.save(file_path)
+            uploaded_files.append(file.filename)
+    
+    return jsonify({'success': True, 'uploaded_files': uploaded_files})
+
+
+@app.route('/api/delete-model', methods=['POST'])
+def delete_model():
+    """删除YOLO11模型文件"""
+    import os
+    
+    # 获取安装路径
+    install_path = request.headers.get('X-Install-Path', 'plugins/yolo11')
+    # 确保安装路径是相对于项目根目录的
+    if not os.path.isabs(install_path):
+        install_path = os.path.join(app.root_path, install_path)
+    
+    # 获取模型名称
+    data = request.json or {}
+    model_name = data.get('model_name', '')
+    
+    # 检查YOLO11是否安装
+    if not os.path.exists(install_path) or not os.path.isdir(install_path):
+        return jsonify({'success': False, 'error': 'YOLO11未安装'})
+    
+    # 检查模型名称是否为空
+    if not model_name:
+        return jsonify({'success': False, 'error': '模型名称不能为空'})
+    
+    # 构建模型文件路径
+    models_dir = os.path.join(install_path, 'models')
+    model_path = os.path.join(models_dir, model_name)
+    
+    # 检查模型文件是否存在
+    if not os.path.exists(model_path):
+        return jsonify({'success': False, 'error': '模型文件不存在'})
+    
+    try:
+        # 删除模型文件
+        os.remove(model_path)
+        return jsonify({'success': True, 'message': f'模型 {model_name} 删除成功'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'删除模型失败: {str(e)}'})
+
+
 @app.route('/api/export', methods=['POST'])
 def export_dataset():
     """导出数据集"""
     try:
+        import datetime
+        
         data = request.json or {}
         # 确保比例值是有效的数字，处理前端可能发送的null或undefined
         train_ratio = float(data.get('train_ratio', 0.7)) if data.get('train_ratio') is not None else 0.7
@@ -478,7 +860,13 @@ def export_dataset():
         import tempfile
         import zipfile
         temp_dir = tempfile.mkdtemp()
-        yolo_base = os.path.join(temp_dir, 'yolo_dataset')
+        
+        # 生成带时间戳的基础名称，格式：datasets_年月日时分秒
+        timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+        base_name = f"datasets_{timestamp}"
+        
+        # 不管有没有前缀，zip文件名和内部文件夹名称都使用datasets_年月日时分秒格式
+        yolo_base = os.path.join(temp_dir, base_name)
         
         # 创建符合YOLOv11格式的目录结构
         for split in ['train', 'val', 'test']:
@@ -679,17 +1067,15 @@ names: {selected_classes}
                                         print(f"Invalid points data for annotation: {ann}")
                     # 对于未标注的图片，文件将保持为空（只需创建文件）
         
-        # 创建zip文件，添加前缀
-        if export_prefix:
-            zip_filename = f"{export_prefix}_yolo_dataset.zip"
-        else:
-            zip_filename = "yolo_dataset.zip"
+        # 创建zip文件，使用带时间戳的名称
+        zip_filename = f"{base_name}.zip"
         zip_path = os.path.join(temp_dir, zip_filename)
         with zipfile.ZipFile(zip_path, 'w') as zipf:
             for root, dirs, files in os.walk(yolo_base):
                 for file in files:
                     file_path = os.path.join(root, file)
-                    arc_name = os.path.relpath(file_path, temp_dir)
+                    # 使用yolo_base作为基准路径，这样zip文件中的目录结构就是直接的train/images/xxx.jpg
+                    arc_name = os.path.relpath(file_path, yolo_base)
                     zipf.write(file_path, arc_name)
         
         # 返回zip文件
