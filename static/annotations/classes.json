@@ -4,39 +4,11 @@
     "name": "\u4eba"
   },
   {
-    "color": "#d43c7f",
-    "name": "head"
+    "name": "unsleep",
+    "color": "#d92a02"
   },
   {
-    "color": "#63673b",
-    "name": "Y-safehat"
-  },
-  {
-    "color": "#58fbf9",
-    "name": "O-safehat"
-  },
-  {
-    "color": "#a817c5",
-    "name": "B-safehat"
-  },
-  {
-    "color": "#883509",
-    "name": "W-safehat"
-  },
-  {
-    "color": "#30bc8c",
-    "name": "R-safehat"
-  },
-  {
-    "color": "#3bf71b",
-    "name": "G-safehat"
-  },
-  {
-    "color": "#9f085f",
-    "name": "unsleep"
-  },
-  {
-    "color": "#3f16da",
-    "name": "sleep"
+    "name": "sleep",
+    "color": "#ad3f63"
   }
 ]

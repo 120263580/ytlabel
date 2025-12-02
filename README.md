@@ -13,6 +13,14 @@
 - 集成YOLO11模型管理，支持安装、卸载和预训练模型下载
 - 简洁直观的用户界面，易于使用
 
+### 软件截图
+<img width="720" alt="1" src="https://gitee.com/Vanishi/images/raw/master/xclabel/v2.1/1.png">
+<img width="720" alt="2" src="https://gitee.com/Vanishi/images/raw/master/xclabel/v2.1/2.png">
+<img width="720" alt="3" src="https://gitee.com/Vanishi/images/raw/master/xclabel/v2.1/3.png">
+<img width="720" alt="4" src="https://gitee.com/Vanishi/images/raw/master/xclabel/v2.1/4.png">
+<img width="720" alt="5" src="https://gitee.com/Vanishi/images/raw/master/xclabel/v2.1/5.png">
+<img width="720" alt="6" src="https://gitee.com/Vanishi/images/raw/master/xclabel/v2.1/6.png">
+
 ### 版本历史
 
 #### v2.1 (当前版本)

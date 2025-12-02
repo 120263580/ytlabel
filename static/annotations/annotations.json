@@ -2,7 +2,7 @@
   "sleep1.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           15.666666666666664,
@@ -25,7 +25,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           267.0,
@@ -50,7 +50,7 @@
   "sleep2.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           138.5185185185185,
@@ -75,7 +75,7 @@
   "sleep3.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           76.66666666666667,
@@ -100,7 +100,7 @@
   "sleep4.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           153.9800995024876,
@@ -125,7 +125,7 @@
   "sleep5.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           1.7857142857143344,
@@ -148,7 +148,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           399.10714285714295,
@@ -173,7 +173,7 @@
   "sleep6.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           188.0,
@@ -198,7 +198,7 @@
   "sleep7.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           67.03271028037385,
@@ -223,7 +223,7 @@
   "sleep8.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           200.96652719665275,
@@ -248,7 +248,7 @@
   "sleep9.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           0.0,
@@ -273,7 +273,7 @@
   "sleep10.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           22.666666666666664,
@@ -298,7 +298,7 @@
   "sleep13.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           179.7101449275362,
@@ -323,7 +323,7 @@
   "sleep14.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           346.4935064935065,
@@ -348,7 +348,7 @@
   "sleep15.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           111.5942028985507,
@@ -373,7 +373,7 @@
   "sleep17.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           182.97101449275362,
@@ -398,7 +398,7 @@
   "sleep18.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           245.65217391304344,
@@ -423,7 +423,7 @@
   "sleep21.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           94.92753623188405,
@@ -448,7 +448,7 @@
   "sleep22.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           74.02597402597405,
@@ -473,7 +473,7 @@
   "sleep23.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           169.9029126213592,
@@ -498,7 +498,7 @@
   "sleep24.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           69.60144927536231,
@@ -523,7 +523,7 @@
   "sleep25.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           2.89855072463768,
@@ -548,7 +548,7 @@
   "sleep27.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           68.84057971014492,
@@ -573,7 +573,7 @@
   "sleep28.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           40.65686274509806,
@@ -596,7 +596,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           319.48039215686276,
@@ -621,7 +621,7 @@
   "sleep29.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           306.3313609467455,
@@ -646,7 +646,7 @@
   "sleep31.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           0.700934579439263,
@@ -669,7 +669,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           289.9532710280374,
@@ -692,7 +692,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           275.46728971962614,
@@ -715,7 +715,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           1.6355140186915946,
@@ -740,7 +740,7 @@
   "sleep32.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           91.66666666666667,
@@ -765,7 +765,7 @@
   "sleep33.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           97.14285714285714,
@@ -790,7 +790,7 @@
   "sleep34.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           22.878787878787875,
@@ -815,7 +815,7 @@
   "sleep35.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           151.3673469387755,
@@ -840,7 +840,7 @@
   "sleep37.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           39.85765124555161,
@@ -865,7 +865,7 @@
   "sleep38.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           7.7669902912621325,
@@ -890,7 +890,7 @@
   "sleep39.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           27.016129032258064,
@@ -915,7 +915,7 @@
   "sleep40.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           390.0537634408602,
@@ -938,7 +938,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           1.8817204301075279,
@@ -961,7 +961,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           0.8064516129032313,
@@ -984,7 +984,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           282.5268817204301,
@@ -1007,7 +1007,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           423.92473118279565,
@@ -1030,7 +1030,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           583.6021505376343,
@@ -1053,7 +1053,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           505.1075268817204,
@@ -1076,7 +1076,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           356.72043010752685,
@@ -1099,7 +1099,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           19.08602150537635,
@@ -1122,7 +1122,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           168.54838709677418,
@@ -1147,7 +1147,7 @@
   "sleep41.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           132.6086956521739,
@@ -1172,7 +1172,7 @@
   "sleep43.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           243.8709677419355,
@@ -1197,7 +1197,7 @@
   "sleep44.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           161.231884057971,
@@ -1222,7 +1222,7 @@
   "sleep45.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           124.27184466019416,
@@ -1247,7 +1247,7 @@
   "sleep46.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           76.78260869565219,
@@ -1272,7 +1272,7 @@
   "sleep47.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           115.85152838427946,
@@ -1297,7 +1297,7 @@
   "sleep48.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           62.621359223300985,
@@ -1322,7 +1322,7 @@
   "sleep49.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           94.92753623188406,
@@ -1347,7 +1347,7 @@
   "sleep50.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           519.4174757281554,
@@ -1372,7 +1372,7 @@
   "sleep51.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           107.54385964912282,
@@ -1397,7 +1397,7 @@
   "sleep52.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           12.318840579710127,
@@ -1422,7 +1422,7 @@
   "sleep53.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           69.59349593495936,
@@ -1447,7 +1447,7 @@
   "sleep54.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           4.999999999999957,
@@ -1472,7 +1472,7 @@
   "sleep55.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           494.1747572815534,
@@ -1495,7 +1495,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           356.31067961165047,
@@ -1518,7 +1518,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           203.88349514563106,
@@ -1541,7 +1541,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           154.36893203883494,
@@ -1564,7 +1564,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           515.5339805825242,
@@ -1587,7 +1587,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           644.6601941747573,
@@ -1610,7 +1610,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           386.4077669902913,
@@ -1635,7 +1635,7 @@
   "sleep56.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           198.91304347826087,
@@ -1660,7 +1660,7 @@
   "sleep57.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           121.44654088050315,
@@ -1685,7 +1685,7 @@
   "sleep58.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           112.18894009216586,
@@ -1710,7 +1710,7 @@
   "sleep59.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           72.0883534136546,
@@ -1735,7 +1735,7 @@
   "sleep60.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           151.9406779661017,
@@ -1760,7 +1760,7 @@
   "sleep61.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           116.11111111111109,
@@ -1785,7 +1785,7 @@
   "sleep62.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           176.7741935483871,
@@ -1810,7 +1810,7 @@
   "sleep63.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           288.3495145631068,
@@ -1835,7 +1835,7 @@
   "sleep64.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           8.835443037974699,
@@ -1860,7 +1860,7 @@
   "sleep65.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           9.84126984126982,
@@ -1883,7 +1883,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           255.87301587301585,
@@ -1906,7 +1906,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           632.063492063492,
@@ -1929,7 +1929,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           430.4761904761904,
@@ -1952,7 +1952,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           209.04761904761904,
@@ -1975,7 +1975,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           388.4126984126984,
@@ -1998,7 +1998,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           742.3809523809523,
@@ -2023,7 +2023,7 @@
   "sleep66.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           967.3684210526317,
@@ -2048,7 +2048,7 @@
   "sleep67.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           7.777777777777729,
@@ -2073,7 +2073,7 @@
   "sleep68.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           87.74193548387098,
@@ -2098,7 +2098,7 @@
   "sleep69.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           73.7864077669903,
@@ -2123,7 +2123,7 @@
   "sleep70.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           60.13513513513516,
@@ -2148,7 +2148,7 @@
   "sleep71.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           112.68115942028986,
@@ -2173,7 +2173,7 @@
   "sleep72.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           22.136563876651977,
@@ -2198,7 +2198,7 @@
   "sleep73.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           20.969696969696997,
@@ -2223,7 +2223,7 @@
   "sleep74.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           218.27309236947787,
@@ -2248,7 +2248,7 @@
   "sleep75.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           4.347826086956516,
@@ -2273,7 +2273,7 @@
   "sleep76.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           47.46376811594203,
@@ -2298,7 +2298,7 @@
   "sleep77.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           65.32911392405066,
@@ -2321,7 +2321,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           2.670886075949383,
@@ -2344,7 +2344,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           1.4050632911392569,
@@ -2367,7 +2367,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           58.36708860759496,
@@ -2390,7 +2390,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           172.9240506329114,
@@ -2413,7 +2413,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           367.8607594936709,
@@ -2436,7 +2436,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           279.2531645569621,
@@ -2459,7 +2459,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           546.9746835443037,
@@ -2482,7 +2482,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           64.69620253164558,
@@ -2505,7 +2505,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           127.9873417721519,
@@ -2528,7 +2528,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           300.13924050632914,
@@ -2551,7 +2551,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           343.17721518987344,
@@ -2574,7 +2574,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           461.53164556962025,
@@ -2597,7 +2597,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           579.253164556962,
@@ -2620,7 +2620,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           762.7974683544303,
@@ -2643,7 +2643,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           753.9367088607595,
@@ -2666,7 +2666,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           687.4810126582278,
@@ -2689,7 +2689,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           626.0886075949367,
@@ -2712,7 +2712,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           551.4050632911392,
@@ -2735,7 +2735,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           448.873417721519,
@@ -2758,7 +2758,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           514.0632911392405,
@@ -2781,7 +2781,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           618.493670886076,
@@ -2804,7 +2804,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           450.7721518987342,
@@ -2829,7 +2829,7 @@
   "sleep78.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           3.0,
@@ -2854,7 +2854,7 @@
   "sleep79.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           72.46376811594202,
@@ -2877,7 +2877,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           307.6086956521739,
@@ -2902,7 +2902,7 @@
   "sleep81.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           183.69565217391303,
@@ -2927,7 +2927,7 @@
   "sleep82.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           263.33333333333326,
@@ -2952,7 +2952,7 @@
   "sleep83.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           163.87096774193546,
@@ -2975,7 +2975,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           3.8709677419354875,
@@ -2998,7 +2998,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           523.8709677419355,
@@ -3023,7 +3023,7 @@
   "sleep85.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           176.70103092783506,
@@ -3046,7 +3046,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           107.11340206185564,
@@ -3069,7 +3069,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           451.4432989690722,
@@ -3092,7 +3092,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           335.97938144329896,
@@ -3117,7 +3117,7 @@
   "sleep86.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           21.359223300970882,
@@ -3142,7 +3142,7 @@
   "sleep87.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           151.59414225941424,
@@ -3167,7 +3167,7 @@
   "sleep88.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           9.420289855072468,
@@ -3192,7 +3192,7 @@
   "sleep89.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           257.2834645669291,
@@ -3217,7 +3217,7 @@
   "sleep90.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           85.50724637681158,
@@ -3242,7 +3242,7 @@
   "sleep91.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           54.710144927536234,
@@ -3267,7 +3267,7 @@
   "sleep92.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           198.06451612903223,
@@ -3292,7 +3292,7 @@
   "sleep93.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           55.07246376811594,
@@ -3317,7 +3317,7 @@
   "sleep94.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           491.2621359223301,
@@ -3342,7 +3342,7 @@
   "sleep95.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           235.55555555555551,
@@ -3367,7 +3367,7 @@
   "sleep96.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           25.895196506550192,
@@ -3392,7 +3392,7 @@
   "sleep97.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           212.63888888888883,
@@ -3417,7 +3417,7 @@
   "sleep98.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           331.3559322033898,
@@ -3442,7 +3442,7 @@
   "sleep99.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           1.0869565217391326,
@@ -3467,7 +3467,7 @@
   "sleep100.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           118.1944444444444,
@@ -3492,7 +3492,7 @@
   "sleep101.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           220.45454545454544,
@@ -3517,7 +3517,7 @@
   "sleep102.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           43.06521739130433,
@@ -3542,7 +3542,7 @@
   "sleep105.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           82.97101449275361,
@@ -3567,7 +3567,7 @@
   "sleep106.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           197.16460905349794,
@@ -3590,7 +3590,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           267.5349794238683,
@@ -3613,7 +3613,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           149.83950617283952,
@@ -3636,7 +3636,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           472.47325102880654,
@@ -3661,7 +3661,7 @@
   "sleep108.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           60.144927536231876,
@@ -3686,7 +3686,7 @@
   "sleep109.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           47.36111111111106,
@@ -3711,7 +3711,7 @@
   "sleep110.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           36.59420289855072,
@@ -3736,7 +3736,7 @@
   "sleep116.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           5.5307262569832325,
@@ -3761,7 +3761,7 @@
   "sleep117.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           111.23188405797102,
@@ -3786,7 +3786,7 @@
   "sleep119.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           94.92753623188405,
@@ -3811,7 +3811,7 @@
   "sleep121.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           132.94117647058823,
@@ -3836,7 +3836,7 @@
   "sleep122.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           165.0485436893204,
@@ -3859,7 +3859,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           43.689320388349515,
@@ -3884,7 +3884,7 @@
   "sleep123.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           270.28985507246375,
@@ -3909,7 +3909,7 @@
   "sleep124.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           72.85714285714295,
@@ -3934,7 +3934,7 @@
   "sleep125.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           88.40579710144927,
@@ -3959,7 +3959,7 @@
   "sleep126.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           147.70833333333337,
@@ -3984,7 +3984,7 @@
   "sleep127.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           54.13089005235608,
@@ -4009,7 +4009,7 @@
   "sleep128.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           21.359223300970882,
@@ -4032,7 +4032,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           192.23300970873788,
@@ -4057,7 +4057,7 @@
   "sleep129.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           27.727272727272734,
@@ -4082,7 +4082,7 @@
   "sleep130.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           6.515151515151516,
@@ -4107,7 +4107,7 @@
   "sleep131.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           122.46376811594202,
@@ -4132,7 +4132,7 @@
   "sleep132.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           8.69565217391306,
@@ -4157,7 +4157,7 @@
   "sleep133.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           165.5079365079365,
@@ -4182,7 +4182,7 @@
   "sleep135.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           207.0833333333333,
@@ -4207,7 +4207,7 @@
   "sleep137.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           196.31578947368428,
@@ -4232,7 +4232,7 @@
   "sleep138.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           67.39130434782608,
@@ -4257,7 +4257,7 @@
   "sleep141.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           138.71014492753625,
@@ -4282,7 +4282,7 @@
   "sleep142.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           258.51554404145077,
@@ -4305,7 +4305,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           30.01813471502588,
@@ -4328,7 +4328,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           434.16321243523316,
@@ -4351,7 +4351,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           538.8264248704663,
@@ -4374,7 +4374,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           222.7642487046632,
@@ -4397,7 +4397,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           123.28238341968908,
@@ -4420,7 +4420,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           33.645077720207226,
@@ -4443,7 +4443,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           138.82642487046627,
@@ -4466,7 +4466,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           292.7124352331606,
@@ -4489,7 +4489,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           532.0906735751296,
@@ -4512,7 +4512,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           319.1373056994819,
@@ -4535,7 +4535,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           207.73834196891193,
@@ -4560,7 +4560,7 @@
   "sleep143.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           18.527918781725887,
@@ -4585,7 +4585,7 @@
   "sleep144.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           181.99152542372883,
@@ -4610,7 +4610,7 @@
   "sleep145.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           213.3333333333333,
@@ -4635,7 +4635,7 @@
   "sleep147.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           41.75187969924815,
@@ -4660,7 +4660,7 @@
   "sleep148.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           10.740601503759422,
@@ -4685,7 +4685,7 @@
   "sleep149.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           107.77292576419212,
@@ -4708,7 +4708,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           466.7248908296943,
@@ -4733,7 +4733,7 @@
   "sleep150.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           112.36842105263162,
@@ -4758,7 +4758,7 @@
   "sleep151.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           180.56768558951967,
@@ -4783,7 +4783,7 @@
   "sleep152.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           147.2826086956522,
@@ -4808,7 +4808,7 @@
   "sleep153.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           380.69444444444446,
@@ -4833,7 +4833,7 @@
   "sleep154.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           335.17117117117124,
@@ -4858,7 +4858,7 @@
   "sleep155.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           219.530303030303,
@@ -4883,7 +4883,7 @@
   "sleep156.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           289.7222222222222,
@@ -4908,7 +4908,7 @@
   "sleep158.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           230.45454545454544,
@@ -4933,7 +4933,7 @@
   "sleep159.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           367.391304347826,
@@ -4958,7 +4958,7 @@
   "sleep162.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           382.9824561403509,
@@ -4983,7 +4983,7 @@
   "sleep163.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           257.3521126760563,
@@ -5008,7 +5008,7 @@
   "sleep164.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           121.46026490066222,
@@ -5031,7 +5031,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           601.592715231788,
@@ -5056,7 +5056,7 @@
   "sleep165.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           9.912280701754446,
@@ -5079,7 +5079,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           246.7543859649123,
@@ -5102,7 +5102,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           547.6315789473684,
@@ -5127,7 +5127,7 @@
   "sleep166.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           60.19417475728153,
@@ -5152,7 +5152,7 @@
   "sleep167.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           224.41489361702125,
@@ -5177,7 +5177,7 @@
   "sleep168.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           149.27536231884056,
@@ -5202,7 +5202,7 @@
   "sleep169.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           27.5,
@@ -5225,7 +5225,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           337.1153846153846,
@@ -5248,7 +5248,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           668.8461538461538,
@@ -5273,7 +5273,7 @@
   "sleep171.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           1.8072289156626482,
@@ -5298,7 +5298,7 @@
   "sleep172.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           3.103448275862064,
@@ -5323,7 +5323,7 @@
   "sleep173.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           350.67961165048547,
@@ -5346,7 +5346,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           987.5728155339806,
@@ -5371,7 +5371,7 @@
   "sleep174.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           255.3125,
@@ -5396,7 +5396,7 @@
   "sleep175.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           129.66101694915253,
@@ -5421,7 +5421,7 @@
   "sleep176.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           73.13768115942028,
@@ -5446,7 +5446,7 @@
   "sleep177.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           237.89473684210526,
@@ -5469,7 +5469,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           472.6315789473684,
@@ -5492,7 +5492,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           546.8421052631578,
@@ -5517,7 +5517,7 @@
   "sleep178.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           21.811594202898565,
@@ -5540,7 +5540,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           345.3623188405797,
@@ -5565,7 +5565,7 @@
   "sleep179.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           393.921568627451,
@@ -5588,7 +5588,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           421.3725490196078,
@@ -5611,7 +5611,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           758.627450980392,
@@ -5636,7 +5636,7 @@
   "sleep180.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           286.4077669902913,
@@ -5661,7 +5661,7 @@
   "sleep181.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           253.56692913385822,
@@ -5686,7 +5686,7 @@
   "sleep182.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           5.767676767676733,
@@ -5711,7 +5711,7 @@
   "sleep183.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           144.56521739130432,
@@ -5736,7 +5736,7 @@
   "sleep184.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           57.67441860465118,
@@ -5761,7 +5761,7 @@
   "sleep185.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           188.04347826086953,
@@ -5786,7 +5786,7 @@
   "sleep186.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           318.3163265306123,
@@ -5809,7 +5809,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           20.357142857142918,
@@ -5832,7 +5832,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           755.0510204081633,
@@ -5855,7 +5855,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           860.1530612244899,
@@ -5880,7 +5880,7 @@
   "sleep187.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           174.46610169491527,
@@ -5903,7 +5903,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           65.14406779661022,
@@ -5926,7 +5926,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           392.26271186440687,
@@ -5949,7 +5949,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           304.1271186440678,
@@ -5974,7 +5974,7 @@
   "sleep188.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           163.6521739130435,
@@ -5999,7 +5999,7 @@
   "sleep189.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           116.93150684931504,
@@ -6024,7 +6024,7 @@
   "sleep192.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           49.97826086956523,
@@ -6049,7 +6049,7 @@
   "sleep193.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           465.2551020408164,
@@ -6072,7 +6072,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           942.8061224489795,
@@ -6095,7 +6095,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           837.7040816326531,
@@ -6118,7 +6118,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           177.50000000000009,
@@ -6143,7 +6143,7 @@
   "sleep194.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           142.76422764227644,
@@ -6168,7 +6168,7 @@
   "sleep195.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           1.9774011299435017,
@@ -6191,7 +6191,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           221.1864406779661,
@@ -6214,7 +6214,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           425.7062146892655,
@@ -6239,7 +6239,7 @@
   "sleep198.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           273.00380228136885,
@@ -6264,7 +6264,7 @@
   "sleep199.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           138.6583850931677,
@@ -6289,7 +6289,7 @@
   "sleep200.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           480.4347826086956,
@@ -6312,7 +6312,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           1004.3478260869566,
@@ -6335,7 +6335,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           1145.6521739130433,
@@ -6360,7 +6360,7 @@
   "sleep201.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           3335.7894736842104,
@@ -6385,7 +6385,7 @@
   "sleep202.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           46.071428571428555,
@@ -6410,7 +6410,7 @@
   "sleep203.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           332.5194174757281,
@@ -6435,7 +6435,7 @@
   "sleep204.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           85.47826086956522,
@@ -6460,7 +6460,7 @@
   "sleep206.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           113.59223300970874,
@@ -6485,7 +6485,7 @@
   "sleep207.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           199.99999999999997,
@@ -6510,7 +6510,7 @@
   "sleep210.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           169.5833333333333,
@@ -6535,7 +6535,7 @@
   "sleep212.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           29.15730337078648,
@@ -6558,7 +6558,7 @@
     },
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           4.063670411984987,
@@ -6583,7 +6583,7 @@
   "sleep214.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           195.9456066945607,
@@ -6608,7 +6608,7 @@
   "sleep215.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           61.66666666666666,
@@ -6633,7 +6633,7 @@
   "sleep216.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           364.9382716049383,
@@ -6658,7 +6658,7 @@
   "sleep219.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           70.28985507246377,
@@ -6681,7 +6681,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           173.18840579710144,
@@ -6706,7 +6706,7 @@
   "sleep220.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           6.768558951965076,
@@ -6731,7 +6731,7 @@
   "sleep222.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           109.05104408352669,
@@ -6754,7 +6754,7 @@
     },
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           256.614849187935,
@@ -6779,7 +6779,7 @@
   "sleep226.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           113.59223300970875,
@@ -6804,7 +6804,7 @@
   "sleep227.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           13.478260869565233,
@@ -6829,7 +6829,7 @@
   "sleep228.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           81.88405797101449,
@@ -6854,7 +6854,7 @@
   "sleep230.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           97.93364928909952,
@@ -6879,7 +6879,7 @@
   "sleep236.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           84.28260869565217,
@@ -6904,7 +6904,7 @@
   "sleep237.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           73.79518072289156,
@@ -6929,7 +6929,7 @@
   "sleep238.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           238.76811594202894,
@@ -6954,7 +6954,7 @@
   "sleep239.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           1.0077519379845015,
@@ -6979,7 +6979,7 @@
   "sleep240.jpg": [
     {
       "class": "sleep",
-      "color": "#3f16da",
+      "color": "#ad3f63",
       "points": [
         [
           1572.6315789473686,
@@ -7004,7 +7004,7 @@
   "sleep241.jpg": [
     {
       "class": "unsleep",
-      "color": "#9f085f",
+      "color": "#d92a02",
       "points": [
         [
           159.2826086956522,
