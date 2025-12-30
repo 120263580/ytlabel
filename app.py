@@ -138,6 +138,8 @@ class VideoAnnotationTask:
                             self.status = TASK_STATUS['ERROR']
                             self.send_progress()
                             break
+                        # 发送进度更新，告知正在重连
+                        self.send_progress()
                         # 继续循环，不中断任务
                         continue
                     else:
@@ -145,6 +147,10 @@ class VideoAnnotationTask:
                         break
                 
                 self.frame_count += 1
+                
+                # 发送进度更新，即使不处理当前帧，也要更新帧计数
+                if self.frame_count % 10 == 0:  # 每10帧发送一次进度更新
+                    self.send_progress()
                 
                 # 按照指定间隔处理帧
                 if self.frame_count % self.frame_interval == 0:
@@ -231,6 +237,8 @@ class VideoAnnotationTask:
                     except Exception as e:
                         # API请求失败，继续处理下一帧
                         logging.error(f"API request failed: {str(e)}")
+                        # 发送进度更新，告知API请求失败
+                        self.send_progress()
                         continue
                     
                     # 检查停止信号
@@ -239,6 +247,8 @@ class VideoAnnotationTask:
                     
                     # 解析结果
                     if "choices" not in result or len(result["choices"]) == 0:
+                        # 发送进度更新，告知解析结果失败
+                        self.send_progress()
                         continue
                     
                     content = result["choices"][0]["message"]["content"]
@@ -248,9 +258,16 @@ class VideoAnnotationTask:
                         content = content[:-3]
                     content = content.strip()
                     
-                    detections = json.loads(content).get("detections", [])
-                    if isinstance(detections, dict):
-                        detections = [detections]
+                    try:
+                        detections = json.loads(content).get("detections", [])
+                        if isinstance(detections, dict):
+                            detections = [detections]
+                    except json.JSONDecodeError as e:
+                        # JSON解析失败，继续处理下一帧
+                        logging.error(f"Failed to parse JSON response: {str(e)}")
+                        # 发送进度更新，告知JSON解析失败
+                        self.send_progress()
+                        continue
                     
                     # 检查停止信号
                     if self.stop_event.is_set():
