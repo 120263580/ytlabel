@@ -374,8 +374,9 @@ class VideoAnnotationTask:
         }
 
 # 配置
-UPLOAD_FOLDER = 'uploads'
-STATIC_FOLDER = 'static'
+import os
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+STATIC_FOLDER = os.path.join(os.path.dirname(__file__), 'static')
 ANNOTATIONS_FOLDER = os.path.join(STATIC_FOLDER, 'annotations')
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -416,6 +417,111 @@ def index():
 def auto_label():
     return render_template('auto_label.html')
 
+@app.route('/file-manager')
+def file_manager():
+    """文件管理页面"""
+    return render_template('file_manager.html')
+
+@app.route('/api/files')
+def get_files():
+    """获取指定路径下的文件列表"""
+    import os
+    import mimetypes
+    from datetime import datetime
+    
+    # 获取请求参数
+    path = request.args.get('path', 'uploads')
+    
+    # 安全检查，防止路径遍历攻击
+    if '..' in path or path.startswith('/'):
+        return jsonify({
+            'success': False,
+            'error': 'Invalid path'
+        }), 400
+    
+    # 构建完整路径
+    base_path = app.root_path
+    full_path = os.path.join(base_path, path)
+    
+    # 检查路径是否存在
+    if not os.path.exists(full_path):
+        return jsonify({
+            'success': False,
+            'error': 'Path not found'
+        }), 404
+    
+    # 检查是否为目录
+    if not os.path.isdir(full_path):
+        return jsonify({
+            'success': False,
+            'error': 'Path is not a directory'
+        }), 400
+    
+    # 获取目录下的所有项目
+    items = os.listdir(full_path)
+    files = []
+    
+    for item in items:
+        item_path = os.path.join(full_path, item)
+        item_info = {
+            'name': item,
+            'path': os.path.join(path, item),
+            'relativePath': os.path.relpath(item_path, os.path.join(base_path, 'uploads')).replace('\\', '/') if path.startswith('uploads') else None
+        }
+        
+        if os.path.isdir(item_path):
+            # 文件夹
+            item_info['type'] = 'folder'
+            item_info['size'] = 0
+            # 统计子项目数量
+            try:
+                item_info['children'] = len(os.listdir(item_path))
+            except:
+                item_info['children'] = 0
+        else:
+            # 文件
+            # 获取文件类型
+            mime_type, _ = mimetypes.guess_type(item_path)
+            if mime_type and mime_type.startswith('image/'):
+                item_info['type'] = 'image'
+                # 获取图片尺寸
+                try:
+                    from PIL import Image
+                    with Image.open(item_path) as img:
+                        width, height = img.size
+                        item_info['width'] = width
+                        item_info['height'] = height
+                except:
+                    item_info['width'] = 0
+                    item_info['height'] = 0
+            else:
+                item_info['type'] = 'file'
+            
+            # 获取文件大小
+            item_info['size'] = os.path.getsize(item_path)
+            # 格式化文件大小
+            def format_size(size):
+                """格式化文件大小"""
+                for unit in ['B', 'KB', 'MB', 'GB']:
+                    if size < 1024.0:
+                        return f"{size:.1f} {unit}"
+                    size /= 1024.0
+                return f"{size:.1f} TB"
+            item_info['size'] = format_size(item_info['size'])
+        
+        # 获取修改时间
+        mtime = os.path.getmtime(item_path)
+        item_info['mtime'] = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
+        
+        files.append(item_info)
+    
+    # 按类型排序，文件夹在前，文件在后，然后按名称排序
+    files.sort(key=lambda x: (x['type'] != 'folder', x['name'].lower()))
+    
+    return jsonify({
+        'success': True,
+        'files': files
+    })
 
 @app.route('/api/classes')
 def get_classes():
@@ -524,9 +630,281 @@ def delete_images():
     })
 
 
+@app.route('/api/files/delete', methods=['POST'])
+def delete_files():
+    """删除指定的文件"""
+    data = request.json or {}
+    file_paths = data.get('files', [])
+    
+    deleted_count = 0
+    errors = []
+    
+    for file_path in file_paths:
+        try:
+            # 安全检查，防止路径遍历攻击
+            if '..' in file_path or file_path.startswith('/'):
+                errors.append(f"无效的文件路径: '{file_path}'")
+                continue
+            
+            # 构建完整路径
+            full_path = os.path.join(app.root_path, file_path)
+            
+            # 检查文件是否存在
+            if not os.path.exists(full_path):
+                errors.append(f"文件 '{file_path}' 不存在")
+                continue
+            
+            # 检查是否为文件
+            if not os.path.isfile(full_path):
+                errors.append(f" '{file_path}' 不是文件")
+                continue
+            
+            # 删除文件
+            os.remove(full_path)
+            deleted_count += 1
+            
+            # 如果是图片文件，同时删除对应的标注信息
+            if os.path.splitext(file_path)[1].lower() in ['.png', '.jpg', '.jpeg', '.gif', '.bmp']:
+                image_name = os.path.basename(file_path)
+                annotations = {}
+                if os.path.exists(ANNOTATIONS_FILE):
+                    with open(ANNOTATIONS_FILE, 'r') as f:
+                        annotations = json.load(f)
+                    
+                    if image_name in annotations:
+                        del annotations[image_name]
+                        with open(ANNOTATIONS_FILE, 'w') as f:
+                            json.dump(annotations, f, indent=2)
+        except Exception as e:
+            errors.append(f"删除文件 '{file_path}' 失败: {str(e)}")
+    
+    if errors:
+        return jsonify({
+            'success': False,
+            'deleted_count': deleted_count,
+            'error': '; '.join(errors)
+        }), 400
+    
+    return jsonify({
+        'success': True,
+        'deleted_count': deleted_count
+    })
+
+
+@app.route('/api/files/create-folder', methods=['POST'])
+def create_folder():
+    """创建新文件夹"""
+    data = request.json or {}
+    path = data.get('path', '')
+    folder_name = data.get('folderName', '')
+    
+    # 参数验证
+    if not path or not folder_name:
+        return jsonify({
+            'success': False,
+            'error': '缺少必要参数'
+        }), 400
+    
+    # 安全检查，防止路径遍历攻击
+    if '..' in path or path.startswith('/') or '..' in folder_name or folder_name.startswith('/'):
+        return jsonify({
+            'success': False,
+            'error': '无效的路径或文件夹名称'
+        }), 400
+    
+    try:
+        # 构建完整的文件夹路径
+        full_path = os.path.join(app.root_path, path, folder_name)
+        
+        # 检查文件夹是否已存在
+        if os.path.exists(full_path):
+            return jsonify({
+                'success': False,
+                'error': '文件夹已存在'
+            }), 400
+        
+        # 创建文件夹
+        os.makedirs(full_path, exist_ok=True)
+        
+        return jsonify({
+            'success': True,
+            'message': '文件夹创建成功'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'创建文件夹失败: {str(e)}'
+        }), 500
+
+
+@app.route('/api/files/upload', methods=['POST'])
+def upload_files():
+    """上传文件"""
+    try:
+        # 获取路径参数
+        path = request.form.get('path', 'uploads')
+        
+        # 安全检查，防止路径遍历攻击
+        if '..' in path or path.startswith('/'):
+            return jsonify({
+                'success': False,
+                'error': '无效的路径'
+            }), 400
+        
+        # 获取上传的文件
+        files = request.files.getlist('files[]')
+        if not files:
+            return jsonify({
+                'success': False,
+                'error': '没有选择要上传的文件'
+            }), 400
+        
+        # 构建上传目录路径
+        upload_dir = os.path.join(app.root_path, path)
+        
+        # 确保上传目录存在
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        uploaded_count = 0
+        errors = []
+        
+        # 保存上传的文件
+        for file in files:
+            if file.filename:
+                # 安全检查，防止路径遍历攻击
+                if '..' in file.filename or file.filename.startswith('/'):
+                    errors.append(f"无效的文件名: '{file.filename}'")
+                    continue
+                
+                # 构建完整的文件路径
+                file_path = os.path.join(upload_dir, file.filename)
+                
+                # 检查文件是否已存在
+                if os.path.exists(file_path):
+                    errors.append(f"文件 '{file.filename}' 已存在")
+                    continue
+                
+                # 保存文件
+                file.save(file_path)
+                uploaded_count += 1
+        
+        if errors:
+            return jsonify({
+                'success': False,
+                'uploaded_count': uploaded_count,
+                'error': '; '.join(errors)
+            }), 400
+        
+        return jsonify({
+            'success': True,
+            'uploaded_count': uploaded_count,
+            'message': '文件上传成功'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'上传文件失败: {str(e)}'
+        }), 500
+
+
+@app.route('/api/files/download', methods=['POST'])
+def download_files():
+    """批量下载文件，将选中的文件压缩成tar文件后下载"""
+    try:
+        import tarfile
+        import tempfile
+        
+        # 获取请求参数
+        data = request.json or {}
+        file_paths = data.get('files', [])
+        
+        if not file_paths:
+            return jsonify({
+                'success': False,
+                'error': '没有选择要下载的文件'
+            }), 400
+        
+        # 创建临时目录和tar文件
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # 创建tar文件
+            tar_file_path = os.path.join(temp_dir, 'files.tar')
+            
+            with tarfile.open(tar_file_path, 'w') as tar:
+                # 添加每个文件到tar文件
+                for file_path in file_paths:
+                    # 安全检查，防止路径遍历攻击
+                    if '..' in file_path or file_path.startswith('/'):
+                        continue
+                    
+                    # 构建完整的文件路径
+                    full_path = os.path.join(app.root_path, file_path)
+                    
+                    # 检查文件是否存在且是文件
+                    if os.path.exists(full_path) and os.path.isfile(full_path):
+                        # 获取相对路径（相对于app.root_path）
+                        rel_path = os.path.relpath(full_path, app.root_path)
+                        # 获取文件名
+                        file_name = os.path.basename(full_path)
+                        # 添加文件到tar，使用文件名作为内部名称
+                        tar.add(full_path, arcname=file_name)
+            
+            # 读取tar文件内容
+            with open(tar_file_path, 'rb') as f:
+                tar_content = f.read()
+        
+        # 设置响应头，返回tar文件
+        from flask import make_response
+        response = make_response(tar_content)
+        response.headers['Content-Type'] = 'application/x-tar'
+        response.headers['Content-Disposition'] = 'attachment; filename=files.tar'
+        response.headers['Content-Length'] = len(tar_content)
+        
+        return response
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'下载文件失败: {str(e)}'
+        }), 500
+
+
 @app.route('/api/image/<filename>')
 def get_image(filename):
     """获取指定图片"""
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/uploads/<path:filename>')
+def serve_uploads(filename):
+    """提供uploads目录下的文件访问，支持子目录"""
+    import os
+    
+    # 打印请求的文件名和UPLOAD_FOLDER配置，用于调试
+    print(f"请求的文件路径: {filename}")
+    print(f"UPLOAD_FOLDER配置: {app.config['UPLOAD_FOLDER']}")
+    
+    # 构建完整的文件路径
+    full_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    print(f"完整的文件路径: {full_path}")
+    
+    # 检查文件是否存在
+    if not os.path.exists(full_path):
+        print(f"文件不存在: {full_path}")
+        return jsonify({
+            'success': False,
+            'error': 'File not found',
+            'requested_path': filename,
+            'full_path': full_path,
+            'upload_folder': app.config['UPLOAD_FOLDER']
+        }), 404
+    
+    # 安全检查，防止路径遍历攻击
+    if '..' in filename or filename.startswith('/'):
+        print(f"不安全的文件路径: {filename}")
+        return jsonify({
+            'success': False,
+            'error': 'Invalid file path'
+        }), 400
+    
+    print(f"成功找到文件: {full_path}")
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
