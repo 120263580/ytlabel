@@ -807,6 +807,65 @@ def upload_files():
         }), 500
 
 
+@app.route('/api/upload-video', methods=['POST'])
+def upload_video_for_label():
+    """上传视频文件用于标注"""
+    try:
+        # 检查是否有文件上传
+        if 'video' not in request.files:
+            return jsonify({
+                'success': False,
+                'error': '没有视频文件上传'
+            }), 400
+        
+        file = request.files['video']
+        if file.filename == '':
+            return jsonify({
+                'success': False,
+                'error': '没有选择视频文件'
+            }), 400
+        
+        # 安全检查，防止路径遍历攻击
+        if '..' in file.filename or file.filename.startswith('/'):
+            return jsonify({
+                'success': False,
+                'error': '无效的文件名'
+            }), 400
+        
+        # 构建上传目录路径
+        upload_dir = os.path.join(app.root_path, 'uploads', 'auto', 'video')
+        
+        # 确保上传目录存在
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # 构建完整的文件路径
+        file_path = os.path.join(upload_dir, file.filename)
+        
+        # 检查文件是否已存在
+        if os.path.exists(file_path):
+            return jsonify({
+                'success': False,
+                'error': f'文件 "{file.filename}" 已存在'
+            }), 400
+        
+        # 保存文件
+        file.save(file_path)
+        
+        # 返回相对路径，格式为: uploads/auto/video/filename
+        relative_path = os.path.join('uploads', 'auto', 'video', file.filename)
+        
+        return jsonify({
+            'success': True,
+            'filePath': relative_path,
+            'message': '视频文件上传成功'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'上传视频文件失败: {str(e)}'
+        }), 500
+
+
 @app.route('/api/files/download', methods=['POST'])
 def download_files():
     """批量下载文件，将选中的文件压缩成tar文件后下载"""

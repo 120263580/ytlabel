@@ -664,7 +664,14 @@
                             <form id="videoForm">
                                 <div class="form-group">
                                     <label for="videoFile">视频文件/RTSP流</label>
-                                    <input type="text" id="videoFile" placeholder="test.mp4 或 rtsp://example.com/stream">
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <input type="text" id="videoFile" placeholder="test.mp4 或 rtsp://example.com/stream" style="flex: 1;">
+                                        <input type="file" id="videoUpload" accept="video/*" style="display: none;">
+                                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('videoUpload').click();">
+                                            <i class="fas fa-upload"></i> 选择文件
+                                        </button>
+                                    </div>
+                                    <div id="uploadStatus" style="margin-top: 5px; font-size: 12px; color: #6c757d;"></div>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group">
@@ -831,6 +838,57 @@
             document.getElementById('apiTestForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 testApi();
+            });
+            
+            // 视频文件上传事件
+            document.getElementById('videoUpload').addEventListener('change', function(e) {
+                handleVideoUpload(e.target.files[0]);
+            });
+        }
+        
+        // 处理视频文件上传
+        function handleVideoUpload(file) {
+            if (!file) return;
+            
+            // 检查文件类型是否为视频
+            if (!file.type.startsWith('video/')) {
+                alert('请选择视频文件！');
+                return;
+            }
+            
+            const uploadStatus = document.getElementById('uploadStatus');
+            uploadStatus.textContent = '正在上传...';
+            uploadStatus.style.color = '#007bff';
+            
+            // 创建FormData对象
+            const formData = new FormData();
+            formData.append('video', file);
+            
+            // 发送上传请求
+            fetch('/api/upload-video', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 上传成功，更新视频文件输入框
+                    document.getElementById('videoFile').value = data.filePath;
+                    uploadStatus.textContent = '上传成功！';
+                    uploadStatus.style.color = '#28a745';
+                    
+                    // 3秒后清除上传状态
+                    setTimeout(() => {
+                        uploadStatus.textContent = '';
+                    }, 3000);
+                } else {
+                    uploadStatus.textContent = '上传失败：' + data.error;
+                    uploadStatus.style.color = '#dc3545';
+                }
+            })
+            .catch(error => {
+                uploadStatus.textContent = '上传失败：' + error.message;
+                uploadStatus.style.color = '#dc3545';
             });
         }
 
