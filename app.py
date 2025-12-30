@@ -6,14 +6,372 @@ import base64
 import traceback
 import cv2
 import sys
+import tempfile
+import threading
+import logging
+import uuid
 from urllib.parse import urlparse
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit
 from PIL import Image
+from AiUtils import AIAutoLabeler
 
 
 app = Flask(__name__)
 CORS(app)
+# 配置SocketIO
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+# 任务管理系统
+tasks = {}
+
+# 连接ID和任务ID的映射字典，用于跟踪客户端断开连接时需要停止的任务
+# 格式: {sid: task_id}
+connection_task_map = {}
+
+# 任务状态枚举
+TASK_STATUS = {
+    'IDLE': 'idle',
+    'RUNNING': 'running',
+    'PAUSED': 'paused',
+    'COMPLETED': 'completed',
+    'STOPPED': 'stopped',
+    'ERROR': 'error'
+}
+
+class VideoAnnotationTask:
+    """视频标注任务类"""
+    def __init__(self, task_id, video_path, frame_interval, output_dir, api_config):
+        self.task_id = task_id
+        self.video_path = video_path
+        self.frame_interval = frame_interval
+        self.output_dir = output_dir
+        self.api_config = api_config
+        self.status = TASK_STATUS['IDLE']
+        self.frame_count = 0
+        self.processed_count = 0
+        self.total_detections = 0
+        self.error = None
+        self.thread = None
+        self.stop_event = threading.Event()
+        self.start_time = None
+        
+    def start(self):
+        """开始任务"""
+        import datetime
+        self.status = TASK_STATUS['RUNNING']
+        self.start_time = datetime.datetime.now().isoformat()
+        self.stop_event.clear()
+        self.thread = threading.Thread(target=self.run)
+        self.thread.start()
+        return self.task_id
+    
+    def stop(self):
+        """停止任务"""
+        self.stop_event.set()
+        self.status = TASK_STATUS['STOPPED']
+        self.send_progress()
+        # 不立即join线程，让线程自己完成清理工作
+    
+    def run(self):
+        """运行任务"""
+        try:
+            import os
+            import time
+            import base64
+            import requests
+            
+            # 创建输出目录
+            os.makedirs(self.output_dir, exist_ok=True)
+            raw_dir = os.path.join(self.output_dir, 'raw_frames')
+            labeled_dir = os.path.join(self.output_dir, 'labeled_frames')
+            os.makedirs(raw_dir, exist_ok=True)
+            os.makedirs(labeled_dir, exist_ok=True)
+            
+            # 获取API配置
+            api_url = self.api_config.get('apiUrl', 'http://192.168.1.105:1234/v1')
+            api_key = self.api_config.get('apiKey', '')
+            timeout = int(self.api_config.get('timeout', 30))
+            prompt = self.api_config.get('prompt', '检测图中物体，返回JSON：{"detections":[{"label":"类别","confidence":0.9,"bbox":[x1,y1,x2,y2]}]}')
+            model = self.api_config.get('model', 'qwen/qwen3-vl-8b')
+            
+            # 打开视频流
+            cap = cv2.VideoCapture(self.video_path)
+            if not cap.isOpened():
+                self.error = f'Failed to open video: {self.video_path}'
+                self.status = TASK_STATUS['ERROR']
+                return
+            
+            # 定义颜色映射
+            colors = {
+                "person": (0, 255, 0),
+                "car": (255, 0, 0),
+                "bicycle": (0, 0, 255),
+                "dog": (255, 255, 0),
+                "cat": (255, 0, 255),
+                "人": (0, 255, 0),
+                "车": (255, 0, 0),
+                "自行车": (0, 0, 255),
+                "狗": (255, 255, 0),
+                "猫": (255, 0, 255),
+                "default": (0, 255, 255)
+            }
+            
+            # 处理视频帧
+            while not self.stop_event.is_set():
+                # 检查停止信号
+                if self.stop_event.is_set():
+                    break
+                    
+                ret, frame = cap.read()
+                if not ret:
+                    # 对于RTSP流，尝试重新连接
+                    if self.video_path.startswith('rtsp://'):
+                        # 关闭当前连接
+                        cap.release()
+                        # 短暂休眠后重新打开
+                        time.sleep(1)
+                        cap = cv2.VideoCapture(self.video_path)
+                        if not cap.isOpened():
+                            self.error = f'Failed to reopen RTSP stream: {self.video_path}'
+                            self.status = TASK_STATUS['ERROR']
+                            self.send_progress()
+                            break
+                        # 继续循环，不中断任务
+                        continue
+                    else:
+                        # 对于普通视频文件，退出循环
+                        break
+                
+                self.frame_count += 1
+                
+                # 按照指定间隔处理帧
+                if self.frame_count % self.frame_interval == 0:
+                    # 检查停止信号
+                    if self.stop_event.is_set():
+                        break
+                        
+                    # 保存原始帧
+                    frame_filename = f"frame_{self.frame_count:06d}.jpg"
+                    raw_frame_path = os.path.join(raw_dir, frame_filename)
+                    cv2.imwrite(raw_frame_path, frame)
+                    
+                    # 检查停止信号
+                    if self.stop_event.is_set():
+                        break
+                    
+                    # 调用API进行标注
+                    # 压缩图像
+                    max_size = 640
+                    h, w = frame.shape[:2]
+                    if max(h, w) > max_size:
+                        scale = max_size / max(h, w)
+                        new_w = int(w * scale)
+                        new_h = int(h * scale)
+                        resized_frame = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
+                    else:
+                        resized_frame = frame.copy()
+                    
+                    _, buffer = cv2.imencode('.jpg', resized_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
+                    image_base64 = base64.b64encode(buffer).decode("utf-8")
+                    
+                    # 检查停止信号
+                    if self.stop_event.is_set():
+                        break
+                        
+                    # 构建API请求
+                    headers = {
+                        "Content-Type": "application/json"
+                    }
+                    if api_key:
+                        headers["Authorization"] = f"Bearer {api_key}"
+                    
+                    # 确保API地址以正确的端点结尾
+                    api_endpoint = api_url
+                    if api_endpoint.endswith("/v1"):
+                        api_endpoint = f"{api_endpoint}/chat/completions"
+                    elif not api_endpoint.endswith("/chat/completions"):
+                        api_endpoint = f"{api_endpoint.rstrip('/')}/v1/chat/completions"
+                    
+                    payload = {
+                        "model": model,
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": f"data:image/jpeg;base64,{image_base64}"
+                                        }
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": prompt
+                                    }
+                                ]
+                            }
+                        ],
+                        "temperature": 0.0,
+                        "response_format": {
+                            "type": "text"
+                        }
+                    }
+                    
+                    # 检查停止信号
+                    if self.stop_event.is_set():
+                        break
+                        
+                    # 发送请求
+                    try:
+                        response = requests.post(api_endpoint, headers=headers, json=payload, timeout=timeout)
+                        response.raise_for_status()
+                        result = response.json()
+                    except Exception as e:
+                        # API请求失败，继续处理下一帧
+                        logging.error(f"API request failed: {str(e)}")
+                        continue
+                    
+                    # 检查停止信号
+                    if self.stop_event.is_set():
+                        break
+                    
+                    # 解析结果
+                    if "choices" not in result or len(result["choices"]) == 0:
+                        continue
+                    
+                    content = result["choices"][0]["message"]["content"]
+                    if content.startswith('```json'):
+                        content = content[7:]
+                    if content.endswith('```'):
+                        content = content[:-3]
+                    content = content.strip()
+                    
+                    detections = json.loads(content).get("detections", [])
+                    if isinstance(detections, dict):
+                        detections = [detections]
+                    
+                    # 检查停止信号
+                    if self.stop_event.is_set():
+                        break
+                        
+                    # 渲染检测结果
+                    labeled_frame = frame.copy()
+                    for detection in detections:
+                        label = detection.get("label", "unknown")
+                        confidence = detection.get("confidence", 0.0)
+                        bbox = detection.get("bbox", [0, 0, 0, 0])
+                        
+                        x1, y1, x2, y2 = map(int, bbox)
+                        color = colors.get(label, colors["default"])
+                        
+                        # 绘制检测框
+                        cv2.rectangle(labeled_frame, (x1, y1), (x2, y2), color, 2)
+                        
+                        # 绘制标签
+                        label_text = f"{label}: {confidence:.2f}"
+                        
+                        # 尝试使用PIL渲染中文
+                        try:
+                            from PIL import Image, ImageDraw, ImageFont
+                            import numpy as np
+                            
+                            img_pil = Image.fromarray(cv2.cvtColor(labeled_frame, cv2.COLOR_BGR2RGB))
+                            draw = ImageDraw.Draw(img_pil)
+                            
+                            try:
+                                font = ImageFont.truetype("simhei.ttf", 16)
+                            except IOError:
+                                font = ImageFont.load_default()
+                            
+                            text_x = x1
+                            text_y = y1 - 20 if y1 > 20 else y1 + 20
+                            draw.text((text_x, text_y), label_text, font=font, fill=tuple(color[::-1]))
+                            
+                            labeled_frame = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+                        except Exception:
+                            # 使用OpenCV默认渲染
+                            cv2.putText(labeled_frame, label_text, (x1, y1 - 10 if y1 > 10 else y1 + 20), 
+                                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                    
+                    # 保存渲染后的帧
+                    labeled_frame_path = os.path.join(labeled_dir, frame_filename)
+                    cv2.imwrite(labeled_frame_path, labeled_frame)
+                    
+                    self.processed_count += 1
+                    self.total_detections += len(detections)
+                    
+                    # 生成当前帧和渲染后图片的Base64数据（用于实时显示）
+                    # 压缩当前帧用于显示
+                    _, raw_buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
+                    current_frame_base64 = base64.b64encode(raw_buffer).decode("utf-8")
+                    
+                    # 压缩渲染后的帧用于显示
+                    _, labeled_buffer = cv2.imencode('.jpg', labeled_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
+                    labeled_frame_base64 = base64.b64encode(labeled_buffer).decode("utf-8")
+                    
+                    # 发送进度更新，包含当前帧和渲染后的图片
+                    self.send_progress(current_frame_base64, labeled_frame_base64)
+                    
+                    # 短暂休眠，提高响应速度
+                    time.sleep(0.001)
+            
+            # 确保发送最终的进度更新
+            # 如果状态还没有被设置为STOPPED或ERROR，设置为COMPLETED
+            if self.status != TASK_STATUS['ERROR'] and self.status != TASK_STATUS['STOPPED']:
+                self.status = TASK_STATUS['COMPLETED']
+            # 发送最终的进度更新
+            self.send_progress()
+            
+        except Exception as e:
+            self.status = TASK_STATUS['ERROR']
+            self.error = str(e)
+            self.send_progress()
+        finally:
+            # 释放资源
+            cap.release()
+    
+    def send_progress(self, current_frame=None, labeled_frame=None):
+        """发送进度更新"""
+        import datetime
+        progress = {
+            'task_id': self.task_id,
+            'status': self.status,
+            'frame_count': self.frame_count,
+            'processed_count': self.processed_count,
+            'total_detections': self.total_detections,
+            'error': self.error,
+            'output_dir': self.output_dir,
+            'start_time': self.start_time,
+            'current_time': datetime.datetime.now().isoformat()
+        }
+        
+        # 如果提供了当前帧和渲染后的图片，添加到进度更新中
+        if current_frame:
+            progress['current_frame'] = current_frame
+        if labeled_frame:
+            progress['labeled_frame'] = labeled_frame
+        
+        socketio.emit('progress_update', progress)
+        
+        # 任务完成、停止或出错后，从任务列表中移除任务
+        if self.status in [TASK_STATUS['COMPLETED'], TASK_STATUS['STOPPED'], TASK_STATUS['ERROR']]:
+            # 使用线程安全的方式移除任务
+            if self.task_id in tasks:
+                del tasks[self.task_id]
+        
+    def get_status(self):
+        """获取任务状态"""
+        return {
+            'task_id': self.task_id,
+            'status': self.status,
+            'frame_count': self.frame_count,
+            'processed_count': self.processed_count,
+            'total_detections': self.total_detections,
+            'error': self.error,
+            'output_dir': self.output_dir
+        }
 
 # 配置
 UPLOAD_FOLDER = 'uploads'
@@ -53,6 +411,10 @@ if not os.path.exists(CLASSES_FILE):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/auto-label')
+def auto_label():
+    return render_template('auto_label.html')
 
 
 @app.route('/api/classes')
@@ -440,6 +802,639 @@ def ai_annotate():
         'error': 'AI自动标注功能已停用',
         'details': '管理员已停用此功能'
     }), 400
+
+
+# 自动标注相关API
+@app.route('/api/auto-label/test', methods=['POST'])
+def api_test():
+    """测试大模型API连接"""
+    try:
+        # 获取表单数据
+        if 'image' not in request.files:
+            return jsonify({'success': False, 'error': 'No image file provided'}), 400
+        
+        image_file = request.files['image']
+        api_url = request.form.get('api_url', 'http://192.168.1.105:1234/v1')
+        api_key = request.form.get('api_key', '')
+        timeout = int(request.form.get('timeout', 30))
+        prompt = request.form.get('prompt', '检测图中物体，返回JSON：{"detections":[{"label":"类别","confidence":0.9,"bbox":[x1,y1,x2,y2]}]}')
+        inference_tool = request.form.get('inferenceTool', 'LMStudio')
+        model = request.form.get('model', 'qwen/qwen3-vl-8b')
+        
+        # 保存临时图片文件
+        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as temp_file:
+            temp_file_path = temp_file.name
+            image_file.save(temp_file_path)
+        
+        try:
+            # 初始化AIAutoLabeler
+            labeler = AIAutoLabeler(api_url, api_key, prompt, timeout, inference_tool, model)
+            
+            # 调用analyze_image方法测试API
+            result = labeler.analyze_image(temp_file_path)
+            
+            return jsonify({
+                'success': True,
+                'result': result
+            })
+        finally:
+            # 确保临时文件被删除
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
+@app.route('/api/auto-label/image', methods=['POST'])
+def auto_label_image():
+    """图片自动标注"""
+    try:
+        import os
+        import tempfile
+        import logging
+        
+        # 获取表单数据
+        files = request.files.getlist('images')
+        output_dir = request.form.get('output_dir', 'output')
+        api_url = request.form.get('api_url', 'http://192.168.1.105:1234/v1')
+        api_key = request.form.get('api_key', '')
+        timeout = int(request.form.get('timeout', 30))
+        prompt = request.form.get('prompt', '检测图中物体，返回JSON：{"detections":[{"label":"类别","confidence":0.9,"bbox":[x1,y1,x2,y2]}]}')
+        
+        if not files:
+            return jsonify({'success': False, 'error': 'No image files provided'}), 400
+        
+        # 创建输出目录
+        os.makedirs(output_dir, exist_ok=True)
+        raw_dir = os.path.join(output_dir, 'raw_frames')
+        labeled_dir = os.path.join(output_dir, 'labeled_frames')
+        os.makedirs(raw_dir, exist_ok=True)
+        os.makedirs(labeled_dir, exist_ok=True)
+        
+        processed_count = 0
+        total_detections = 0
+        
+        # 初始化图片列表，用于存储每张图片的处理结果和Base64数据
+        images = []
+        
+        # 获取模型配置
+        model = request.form.get('model', 'qwen/qwen3-vl-8b')
+        
+        # 处理每张图片
+        for file in files:
+            if file.filename == '':
+                continue
+            
+            # 保存原始图片
+            filename = os.path.basename(file.filename)
+            raw_path = os.path.join(raw_dir, filename)
+            file.save(raw_path)
+            
+            # 调用API进行标注
+            import base64
+            import requests
+            
+            # 读取和处理图像
+            img = cv2.imread(raw_path)
+            if img is None:
+                continue
+            
+            # 压缩图像
+            max_size = 640
+            h, w = img.shape[:2]
+            if max(h, w) > max_size:
+                scale = max_size / max(h, w)
+                new_w = int(w * scale)
+                new_h = int(h * scale)
+                img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
+            
+            _, buffer = cv2.imencode('.jpg', img, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
+            image_base64 = base64.b64encode(buffer).decode("utf-8")
+            
+            # 构建API请求
+            headers = {
+                "Content-Type": "application/json"
+            }
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
+            
+            # 确保API地址以正确的端点结尾
+            api_endpoint = api_url
+            if api_endpoint.endswith("/v1"):
+                api_endpoint = f"{api_endpoint}/chat/completions"
+            elif not api_endpoint.endswith("/chat/completions"):
+                api_endpoint = f"{api_endpoint.rstrip('/')}/v1/chat/completions"
+            
+            payload = {
+                "model": model,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{image_base64}"
+                                }
+                            },
+                            {
+                                "type": "text",
+                                "text": prompt
+                            }
+                        ]
+                    }
+                ],
+                "temperature": 0.0,
+                "response_format": {
+                    "type": "text"
+                }
+            }
+            
+            # 发送请求
+            try:
+                response = requests.post(api_endpoint, headers=headers, json=payload, timeout=timeout)
+                
+                # 检查响应状态码
+                if not response.ok:
+                    error_msg = f"API请求失败，状态码: {response.status_code}，响应: {response.text[:200]}..."
+                    logging.error(error_msg)
+                    return jsonify({
+                        'success': False,
+                        'error': error_msg,
+                        'processed': processed_count,
+                        'detections': total_detections,
+                        'output_dir': output_dir
+                    }), 500
+                
+                result = response.json()
+                
+                # 解析结果
+                if "choices" not in result or len(result["choices"]) == 0:
+                    error_msg = "API返回结果格式错误，缺少choices字段"
+                    logging.error(error_msg)
+                    return jsonify({
+                        'success': False,
+                        'error': error_msg,
+                        'processed': processed_count,
+                        'detections': total_detections,
+                        'output_dir': output_dir
+                    }), 500
+                
+                content = result["choices"][0]["message"]["content"]
+                if content.startswith('```json'):
+                    content = content[7:]
+                if content.endswith('```'):
+                    content = content[:-3]
+                content = content.strip()
+                
+                try:
+                    detections = json.loads(content).get("detections", [])
+                    if isinstance(detections, dict):
+                        detections = [detections]
+                except json.JSONDecodeError as e:
+                    error_msg = f"无法解析模型返回的JSON: {content}"
+                    logging.error(error_msg)
+                    return jsonify({
+                        'success': False,
+                        'error': error_msg,
+                        'processed': processed_count,
+                        'detections': total_detections,
+                        'output_dir': output_dir
+                    }), 500
+            except requests.exceptions.ConnectionError as e:
+                error_msg = f"无法连接到API服务器: {str(e)}. 请检查API地址是否正确，服务器是否正在运行。"
+                logging.error(error_msg)
+                return jsonify({
+                    'success': False,
+                    'error': error_msg,
+                    'processed': processed_count,
+                    'detections': total_detections,
+                    'output_dir': output_dir
+                }), 500
+            except requests.exceptions.Timeout as e:
+                error_msg = f"API请求超时: {str(e)}. 请检查网络连接或增加超时时间。"
+                logging.error(error_msg)
+                return jsonify({
+                    'success': False,
+                    'error': error_msg,
+                    'processed': processed_count,
+                    'detections': total_detections,
+                    'output_dir': output_dir
+                }), 500
+            except requests.exceptions.RequestException as e:
+                error_msg = f"API请求异常: {str(e)}"
+                logging.error(error_msg)
+                return jsonify({
+                    'success': False,
+                    'error': error_msg,
+                    'processed': processed_count,
+                    'detections': total_detections,
+                    'output_dir': output_dir
+                }), 500
+            except Exception as e:
+                error_msg = f"处理图片失败: {str(e)}"
+                logging.error(error_msg)
+                return jsonify({
+                    'success': False,
+                    'error': error_msg,
+                    'processed': processed_count,
+                    'detections': total_detections,
+                    'output_dir': output_dir
+                }), 500
+            
+            # 渲染检测结果
+            img = cv2.imread(raw_path)
+            if img is None:
+                continue
+            
+            # 定义颜色映射
+            colors = {
+                "person": (0, 255, 0),
+                "car": (255, 0, 0),
+                "bicycle": (0, 0, 255),
+                "dog": (255, 255, 0),
+                "cat": (255, 0, 255),
+                "人": (0, 255, 0),
+                "车": (255, 0, 0),
+                "自行车": (0, 0, 255),
+                "狗": (255, 255, 0),
+                "猫": (255, 0, 255),
+                "default": (0, 255, 255)
+            }
+            
+            # 渲染检测框和标签
+            for detection in detections:
+                label = detection.get("label", "unknown")
+                confidence = detection.get("confidence", 0.0)
+                bbox = detection.get("bbox", [0, 0, 0, 0])
+                
+                x1, y1, x2, y2 = map(int, bbox)
+                color = colors.get(label, colors["default"])
+                
+                # 绘制检测框
+                cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+                
+                # 绘制标签
+                label_text = f"{label}: {confidence:.2f}"
+                
+                # 尝试使用PIL渲染中文
+                try:
+                    from PIL import Image, ImageDraw, ImageFont
+                    import numpy as np
+                    
+                    img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+                    draw = ImageDraw.Draw(img_pil)
+                    
+                    try:
+                        font = ImageFont.truetype("simhei.ttf", 16)
+                    except IOError:
+                        font = ImageFont.load_default()
+                    
+                    text_x = x1
+                    text_y = y1 - 20 if y1 > 20 else y1 + 20
+                    draw.text((text_x, text_y), label_text, font=font, fill=tuple(color[::-1]))
+                    
+                    img = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+                except Exception:
+                    # 使用OpenCV默认渲染
+                    cv2.putText(img, label_text, (x1, y1 - 10 if y1 > 10 else y1 + 20), 
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+            
+            # 保存渲染后的图片
+            labeled_path = os.path.join(labeled_dir, filename)
+            cv2.imwrite(labeled_path, img)
+            
+            # 生成原始图片的Base64数据
+            import base64
+            with open(raw_path, "rb") as f:
+                raw_image_data = f.read()
+            raw_image_base64 = base64.b64encode(raw_image_data).decode("utf-8")
+            raw_image_base64 = f"data:image/jpeg;base64,{raw_image_base64}"
+            
+            # 生成渲染后图片的Base64数据
+            with open(labeled_path, "rb") as f:
+                labeled_image_data = f.read()
+            labeled_image_base64 = base64.b64encode(labeled_image_data).decode("utf-8")
+            labeled_image_base64 = f"data:image/jpeg;base64,{labeled_image_base64}"
+            
+            # 将图片信息添加到列表
+            images.append({
+                'filename': filename,
+                'original_image': raw_image_base64,
+                'labeled_image': labeled_image_base64,
+                'detections': len(detections)
+            })
+            
+            processed_count += 1
+            total_detections += len(detections)
+        
+        return jsonify({
+            'success': True,
+            'processed': processed_count,
+            'detections': total_detections,
+            'output_dir': output_dir,
+            'images': images
+        })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
+@app.route('/api/auto-label/video', methods=['POST'])
+def auto_label_video():
+    """视频自动标注"""
+    try:
+        import os
+        import time
+        from collections import deque
+        import logging
+        
+        # 获取请求数据
+        data = request.json
+        video_path = data.get('video_path')
+        frame_interval = int(data.get('frame_interval', 10))
+        output_dir = data.get('output_dir', 'output')
+        api_config = data.get('api_config', {})
+        
+        if not video_path:
+            return jsonify({'success': False, 'error': 'No video path provided'}), 400
+        
+        # 创建输出目录
+        os.makedirs(output_dir, exist_ok=True)
+        raw_dir = os.path.join(output_dir, 'raw_frames')
+        labeled_dir = os.path.join(output_dir, 'labeled_frames')
+        os.makedirs(raw_dir, exist_ok=True)
+        os.makedirs(labeled_dir, exist_ok=True)
+        
+        # 获取API配置
+        api_url = api_config.get('apiUrl', 'http://192.168.1.105:1234/v1')
+        api_key = api_config.get('apiKey', '')
+        timeout = int(api_config.get('timeout', 30))
+        prompt = api_config.get('prompt', '检测图中物体，返回JSON：{"detections":[{"label":"类别","confidence":0.9,"bbox":[x1,y1,x2,y2]}]}')
+        model = api_config.get('model', 'qwen/qwen3-vl-8b')
+        
+        # 打开视频流
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            return jsonify({'success': False, 'error': f'Failed to open video: {video_path}'}), 400
+        
+        frame_count = 0
+        processed_count = 0
+        total_detections = 0
+        
+        # 定义颜色映射
+        colors = {
+            "person": (0, 255, 0),
+            "car": (255, 0, 0),
+            "bicycle": (0, 0, 255),
+            "dog": (255, 255, 0),
+            "cat": (255, 0, 255),
+            "人": (0, 255, 0),
+            "车": (255, 0, 0),
+            "自行车": (0, 0, 255),
+            "狗": (255, 255, 0),
+            "猫": (255, 0, 255),
+            "default": (0, 255, 255)
+        }
+        
+        # 处理视频帧
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            
+            # 按照指定间隔处理帧
+            if frame_count % frame_interval == 0:
+                # 保存原始帧
+                frame_filename = f"frame_{frame_count:06d}.jpg"
+                raw_frame_path = os.path.join(raw_dir, frame_filename)
+                cv2.imwrite(raw_frame_path, frame)
+                
+                # 调用API进行标注
+                import base64
+                import requests
+                
+                # 压缩图像
+                max_size = 640
+                h, w = frame.shape[:2]
+                if max(h, w) > max_size:
+                    scale = max_size / max(h, w)
+                    new_w = int(w * scale)
+                    new_h = int(h * scale)
+                    resized_frame = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
+                else:
+                    resized_frame = frame.copy()
+                
+                _, buffer = cv2.imencode('.jpg', resized_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
+                image_base64 = base64.b64encode(buffer).decode("utf-8")
+                
+                # 构建API请求
+                headers = {
+                    "Content-Type": "application/json"
+                }
+                if api_key:
+                    headers["Authorization"] = f"Bearer {api_key}"
+                
+                # 确保API地址以正确的端点结尾
+                api_endpoint = api_url
+                if api_endpoint.endswith("/v1"):
+                    api_endpoint = f"{api_endpoint}/chat/completions"
+                elif not api_endpoint.endswith("/chat/completions"):
+                    api_endpoint = f"{api_endpoint.rstrip('/')}/v1/chat/completions"
+                
+                payload = {
+                    "model": model,
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:image/jpeg;base64,{image_base64}"
+                                    }
+                                },
+                                {
+                                    "type": "text",
+                                    "text": prompt
+                                }
+                            ]
+                        }
+                    ],
+                    "temperature": 0.0,
+                    "response_format": {
+                        "type": "text"
+                    }
+                }
+                
+                # 发送请求
+                try:
+                    response = requests.post(api_endpoint, headers=headers, json=payload, timeout=timeout)
+                    
+                    # 检查响应状态码
+                    if not response.ok:
+                        error_msg = f"API请求失败，状态码: {response.status_code}，响应: {response.text[:200]}..."
+                        logging.error(error_msg)
+                        return jsonify({
+                            'success': False,
+                            'error': error_msg,
+                            'processed': processed_count,
+                            'detections': total_detections,
+                            'output_dir': output_dir
+                        }), 500
+                    
+                    result = response.json()
+                    
+                    # 解析结果
+                    if "choices" not in result or len(result["choices"]) == 0:
+                        error_msg = "API返回结果格式错误，缺少choices字段"
+                        logging.error(error_msg)
+                        return jsonify({
+                            'success': False,
+                            'error': error_msg,
+                            'processed': processed_count,
+                            'detections': total_detections,
+                            'output_dir': output_dir
+                        }), 500
+                    
+                    content = result["choices"][0]["message"]["content"]
+                    if content.startswith('```json'):
+                        content = content[7:]
+                    if content.endswith('```'):
+                        content = content[:-3]
+                    content = content.strip()
+                    
+                    try:
+                        detections = json.loads(content).get("detections", [])
+                        if isinstance(detections, dict):
+                            detections = [detections]
+                    except json.JSONDecodeError as e:
+                        error_msg = f"无法解析模型返回的JSON: {content}"
+                        logging.error(error_msg)
+                        return jsonify({
+                            'success': False,
+                            'error': error_msg,
+                            'processed': processed_count,
+                            'detections': total_detections,
+                            'output_dir': output_dir
+                        }), 500
+                except requests.exceptions.ConnectionError as e:
+                    error_msg = f"无法连接到API服务器: {str(e)}. 请检查API地址是否正确，服务器是否正在运行。"
+                    logging.error(error_msg)
+                    return jsonify({
+                        'success': False,
+                        'error': error_msg,
+                        'processed': processed_count,
+                        'detections': total_detections,
+                        'output_dir': output_dir
+                    }), 500
+                except requests.exceptions.Timeout as e:
+                    error_msg = f"API请求超时: {str(e)}. 请检查网络连接或增加超时时间。"
+                    logging.error(error_msg)
+                    return jsonify({
+                        'success': False,
+                        'error': error_msg,
+                        'processed': processed_count,
+                        'detections': total_detections,
+                        'output_dir': output_dir
+                    }), 500
+                except requests.exceptions.RequestException as e:
+                    error_msg = f"API请求异常: {str(e)}"
+                    logging.error(error_msg)
+                    return jsonify({
+                        'success': False,
+                        'error': error_msg,
+                        'processed': processed_count,
+                        'detections': total_detections,
+                        'output_dir': output_dir
+                    }), 500
+                except Exception as e:
+                    error_msg = f"处理视频帧失败: {str(e)}"
+                    logging.error(error_msg)
+                    return jsonify({
+                        'success': False,
+                        'error': error_msg,
+                        'processed': processed_count,
+                        'detections': total_detections,
+                        'output_dir': output_dir
+                    }), 500
+                
+                # 渲染检测结果
+                labeled_frame = frame.copy()
+                
+                for detection in detections:
+                    label = detection.get("label", "unknown")
+                    confidence = detection.get("confidence", 0.0)
+                    bbox = detection.get("bbox", [0, 0, 0, 0])
+                    
+                    x1, y1, x2, y2 = map(int, bbox)
+                    color = colors.get(label, colors["default"])
+                    
+                    # 绘制检测框
+                    cv2.rectangle(labeled_frame, (x1, y1), (x2, y2), color, 2)
+                    
+                    # 绘制标签
+                    label_text = f"{label}: {confidence:.2f}"
+                    
+                    # 尝试使用PIL渲染中文
+                    try:
+                        from PIL import Image, ImageDraw, ImageFont
+                        import numpy as np
+                        
+                        img_pil = Image.fromarray(cv2.cvtColor(labeled_frame, cv2.COLOR_BGR2RGB))
+                        draw = ImageDraw.Draw(img_pil)
+                        
+                        try:
+                            font = ImageFont.truetype("simhei.ttf", 16)
+                        except IOError:
+                            font = ImageFont.load_default()
+                        
+                        text_x = x1
+                        text_y = y1 - 20 if y1 > 20 else y1 + 20
+                        draw.text((text_x, text_y), label_text, font=font, fill=tuple(color[::-1]))
+                        
+                        labeled_frame = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+                    except Exception:
+                        # 使用OpenCV默认渲染
+                        cv2.putText(labeled_frame, label_text, (x1, y1 - 10 if y1 > 10 else y1 + 20), 
+                                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                
+                # 保存渲染后的帧
+                labeled_frame_path = os.path.join(labeled_dir, frame_filename)
+                cv2.imwrite(labeled_frame_path, labeled_frame)
+                
+                processed_count += 1
+                total_detections += len(detections)
+            
+            frame_count += 1
+        
+        # 释放资源
+        cap.release()
+        
+        return jsonify({
+            'success': True,
+            'processed': processed_count,
+            'detections': total_detections,
+            'output_dir': output_dir
+        })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
 
 
 @app.route('/api/check-yolo11-install')
@@ -1088,8 +2083,152 @@ names: {selected_classes}
         return jsonify({'error': str(e)}), 500
 
 
+# 异步视频标注相关API
+@app.route('/api/auto-label/video/start', methods=['POST'])
+def start_video_annotation():
+    """启动视频标注任务"""
+    try:
+        import os
+        
+        # 获取请求数据
+        data = request.json
+        video_path = data.get('video_path')
+        frame_interval = int(data.get('frame_interval', 10))
+        output_dir = data.get('output_dir', 'output')
+        api_config = data.get('api_config', {})
+        
+        if not video_path:
+            return jsonify({'success': False, 'error': 'No video path provided'}), 400
+        
+        # 创建唯一任务ID
+        task_id = str(uuid.uuid4())
+        
+        # 创建输出目录
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # 创建视频标注任务
+        task = VideoAnnotationTask(task_id, video_path, frame_interval, output_dir, api_config)
+        
+        # 保存任务到任务列表
+        tasks[task_id] = task
+        
+        # 启动任务
+        task.start()
+        
+        # 从请求上下文获取当前连接ID
+        # 在API请求中，request对象来自flask，不直接包含socketio sid
+        # 因此在API请求中我们无法直接获取socketio sid
+        # 这里使用特殊的方式获取，通过flask的request对象的环境变量
+        sid = None
+        if hasattr(request, 'environ') and 'flask_socketio.sid' in request.environ:
+            sid = request.environ['flask_socketio.sid']
+        
+        if sid:
+            # 存储连接ID和任务ID的映射关系
+            connection_task_map[sid] = task_id
+            print(f"关联连接ID {sid} 到任务ID {task_id}")
+        
+        return jsonify({
+            'success': True,
+            'task_id': task_id,
+            'message': 'Video annotation task started successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/auto-label/video/stop', methods=['POST'])
+def stop_video_annotation():
+    """停止视频标注任务"""
+    try:
+        # 获取请求数据
+        data = request.json
+        task_id = data.get('task_id')
+        
+        if not task_id:
+            return jsonify({'success': False, 'error': 'No task ID provided'}), 400
+        
+        # 查找任务
+        if task_id not in tasks:
+            return jsonify({'success': False, 'error': 'Task not found'}), 404
+        
+        # 停止任务
+        task = tasks[task_id]
+        task.stop()
+        
+        # 不要立即从任务列表中移除任务，让任务线程自己完成清理工作
+        # 任务线程会在完成后发送最终的进度更新
+        
+        return jsonify({
+            'success': True,
+            'message': 'Video annotation task stopped successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/auto-label/video/status/<task_id>', methods=['GET'])
+def get_video_annotation_status(task_id):
+    """获取视频标注任务状态"""
+    try:
+        # 查找任务
+        if task_id not in tasks:
+            return jsonify({'success': False, 'error': 'Task not found'}), 404
+        
+        # 获取任务状态
+        task = tasks[task_id]
+        status = task.get_status()
+        
+        return jsonify({
+            'success': True,
+            'status': status
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# SocketIO事件处理
+@socketio.on('connect')
+def handle_connect():
+    """处理客户端连接"""
+    print('Client connected')
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """处理客户端断开连接"""
+    from flask_socketio import request as socket_request
+    sid = socket_request.sid
+    print(f'Client disconnected: {sid}')
+    
+    # 检查该连接是否有关联的任务
+    if sid in connection_task_map:
+        task_id = connection_task_map[sid]
+        print(f'检测到断开连接的客户端有关联任务: {task_id}')
+        
+        # 检查任务是否存在且正在运行
+        if task_id in tasks:
+            task = tasks[task_id]
+            if task.status == TASK_STATUS['RUNNING']:
+                # 停止任务
+                print(f'自动停止任务: {task_id}')
+                task.stop()
+        
+        # 从映射字典中移除该连接
+        del connection_task_map[sid]
+        print(f'移除连接和任务的关联: {sid} -> {task_id}')
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # 使用SocketIO运行应用
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
 
 
 def process_content_data(content_data, annotations):
