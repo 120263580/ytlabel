@@ -132,7 +132,7 @@
    pyinstaller -F app.py
    
    # 打包方式二（强烈推荐，打包的程序包含静态资源，进入dist文件，直接启动xclabel.exe）
-   pyinstaller -F app.spec
+   pyinstaller app.spec
    
    
    ```
