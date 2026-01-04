@@ -4726,6 +4726,20 @@ body {
     background-color: #f0f0f0;
 }
 
+.dataset-modal .upload-area.drag-over {
+    border-color: #007bff;
+    background-color: #e7f3ff;
+    transform: scale(1.02);
+}
+
+.dataset-modal .upload-area.drag-over i {
+    color: #007bff;
+}
+
+.dataset-modal .upload-area.drag-over p {
+    color: #007bff;
+}
+
 .dataset-modal .upload-area i {
     color: #999;
     margin-bottom: 15px;
