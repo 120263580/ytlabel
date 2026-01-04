@@ -297,7 +297,7 @@ CLASSES_FILE = os.path.join(ANNOTATIONS_FOLDER, 'classes.json')
 
 # 初始化注释文件
 if not os.path.exists(ANNOTATIONS_FILE):
-    with open(ANNOTATIONS_FILE, 'w') as f:
+    with open(ANNOTATIONS_FILE, 'w', encoding='utf-8') as f:
         json.dump({}, f)
         
 # 初始化类别文件
@@ -316,9 +316,9 @@ if not os.path.exists(CLASSES_FILE):
 def index():
     return render_template('index.html', version=APP_VERSION)
 
-@app.route('/auto-label')
-def auto_label():
-    return render_template('auto_label.html', version=APP_VERSION)
+@app.route('/ai-config')
+def ai_config():
+    return render_template('ai_config.html', version=APP_VERSION)
 
 @app.route('/file-manager')
 def file_manager():
@@ -461,7 +461,7 @@ def get_images():
     annotations = {}
     if os.path.exists(ANNOTATIONS_FILE):
         try:
-            with open(ANNOTATIONS_FILE, 'r') as f:
+            with open(ANNOTATIONS_FILE, 'r', encoding='utf-8') as f:
                 annotations = json.load(f)
         except json.JSONDecodeError:
             # 如果JSON文件无效或为空，使用空字典
@@ -532,13 +532,13 @@ def delete_images():
                 # 同时删除对应的标注信息
                 annotations = {}
                 if os.path.exists(ANNOTATIONS_FILE):
-                    with open(ANNOTATIONS_FILE, 'r') as f:
+                    with open(ANNOTATIONS_FILE, 'r', encoding='utf-8') as f:
                         annotations = json.load(f)
                     
-                    if image_name in annotations:
-                        del annotations[image_name]
-                        with open(ANNOTATIONS_FILE, 'w') as f:
-                            json.dump(annotations, f, indent=2)
+                if image_name in annotations:
+                    del annotations[image_name]
+                    with open(ANNOTATIONS_FILE, 'w', encoding='utf-8') as f:
+                        json.dump(annotations, f, indent=2)
             else:
                 errors.append(f"图片 '{image_name}' 不存在")
         except Exception as e:
@@ -595,13 +595,13 @@ def delete_files():
                 image_name = os.path.basename(file_path)
                 annotations = {}
                 if os.path.exists(ANNOTATIONS_FILE):
-                    with open(ANNOTATIONS_FILE, 'r') as f:
+                    with open(ANNOTATIONS_FILE, 'r', encoding='utf-8') as f:
                         annotations = json.load(f)
                     
-                    if image_name in annotations:
-                        del annotations[image_name]
-                        with open(ANNOTATIONS_FILE, 'w') as f:
-                            json.dump(annotations, f, indent=2)
+                if image_name in annotations:
+                    del annotations[image_name]
+                    with open(ANNOTATIONS_FILE, 'w', encoding='utf-8') as f:
+                        json.dump(annotations, f, indent=2)
         except Exception as e:
             errors.append(f"删除文件 '{file_path}' 失败: {str(e)}")
     
@@ -1046,6 +1046,168 @@ def upload_labelme_dataset():
         
     except Exception as e:
         return jsonify({'error': f'Failed to process LabelMe dataset: {str(e)}'}), 500
+        
+
+@app.route('/api/ai-label', methods=['POST'])
+def ai_label():
+    """AI标注功能"""
+    try:
+        import os
+        import json
+        import logging
+        import datetime
+        
+        # 获取请求数据
+        data = request.json
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        images = data.get('images', [])
+        selected_label = data.get('label')
+        api_config = data.get('apiConfig', {})
+        
+        if not images:
+            return jsonify({'success': False, 'error': 'No images provided'}), 400
+        
+        if not selected_label:
+            return jsonify({'success': False, 'error': 'No label provided'}), 400
+        
+        # 获取API配置
+        api_url = api_config.get('apiUrl', 'http://192.168.1.105:1234/v1')
+        api_key = api_config.get('apiKey', '')
+        timeout = int(api_config.get('timeout', 30))
+        prompt = api_config.get('prompt', '检测图中物体，返回JSON：{"detections":[{"label":"类别","confidence":0.9,"bbox":[x1,y1,x2,y2]}]}')
+        model = api_config.get('model', 'qwen/qwen3-vl-8b')
+        inference_tool = api_config.get('inferenceTool', 'LMStudio')
+        
+        # 初始化AIAutoLabeler
+        labeler = AIAutoLabeler(api_url, api_key, prompt, timeout, inference_tool, model)
+        
+        # 读取现有的标注信息
+        annotations = {}
+        if os.path.exists(ANNOTATIONS_FILE):
+            with open(ANNOTATIONS_FILE, 'r', encoding='utf-8') as f:
+                annotations = json.load(f)
+        
+        processed_count = 0
+        labeled_count = 0
+        total_images = len(images)
+        start_time = datetime.datetime.now()
+        
+        # 处理每张图片
+        for image_name in images:
+            # 构建图片路径
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_name)
+            if not os.path.exists(image_path):
+                logging.error(f"Image not found: {image_path}")
+                continue
+            
+            processed_count += 1
+            
+            # 发送实时进度更新
+            current_time = datetime.datetime.now()
+            elapsed_seconds = int((current_time - start_time).total_seconds())
+            progress_data = {
+                'task_type': 'ai_label',
+                'status': 'running',
+                'processed': processed_count,
+                'total': total_images,
+                'elapsed_time': elapsed_seconds,
+                'labeled': labeled_count,
+                'message': f'正在处理第 {processed_count}/{total_images} 张图片'
+            }
+            socketio.emit('ai_label_progress', progress_data)
+            
+            # 调用API进行标注
+            try:
+                result = labeler.analyze_image(image_path)
+                detections = result.get("detections", [])
+                if isinstance(detections, dict):
+                    detections = [detections]
+                
+                # 如果检测到目标，更新标注状态
+                if detections:
+                    # 为每张图片创建标注
+                    image_annotations = []
+                    for detection in detections:
+                        # 确保detection是字典
+                        if isinstance(detection, dict):
+                            label = selected_label  # 使用选中的标签
+                            confidence = detection.get("confidence", 0.0)
+                            bbox = detection.get("bbox", [0, 0, 0, 0])
+                            
+                            # 转换为前端期望的标注格式
+                            # 确保bbox是一个包含四个数值的列表
+                            bbox = list(map(float, bbox)) if isinstance(bbox, (list, tuple)) else [0, 0, 0, 0]
+                            # 确保bbox有四个值
+                            if len(bbox) < 4:
+                                bbox = bbox + [0] * (4 - len(bbox))
+                            x1, y1, x2, y2 = bbox[:4]  # 只取前四个值
+                            
+                            annotation = {
+                                "id": str(uuid.uuid4()),  # 添加唯一ID
+                                "class": label,  # 前端使用class字段
+                                "type": "rectangle",  # 前端需要type字段
+                                "points": [
+                                    [x1, y1],
+                                    [x2, y1],
+                                    [x2, y2],
+                                    [x1, y2]
+                                ],  # 转换为points数组
+                                "confidence": confidence
+                            }
+                            image_annotations.append(annotation)
+                    
+                    # 更新标注信息
+                    annotations[image_name] = image_annotations
+                    labeled_count += 1
+            except Exception as e:
+                logging.error(f"Failed to process image {image_name}: {str(e)}")
+                continue
+        
+        # 保存更新后的标注信息
+        with open(ANNOTATIONS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(annotations, f, indent=2, ensure_ascii=False)
+        
+        # 发送最终进度更新
+        current_time = datetime.datetime.now()
+        elapsed_seconds = int((current_time - start_time).total_seconds())
+        final_progress = {
+            'task_type': 'ai_label',
+            'status': 'completed',
+            'processed': processed_count,
+            'total': total_images,
+            'elapsed_time': elapsed_seconds,
+            'labeled': labeled_count,
+            'message': f'标注完成，成功处理 {processed_count} 张图片，其中 {labeled_count} 张标注成功'
+        }
+        socketio.emit('ai_label_progress', final_progress)
+        
+        return jsonify({
+            'success': True,
+            'processed': processed_count,
+            'labeled': labeled_count,
+            'message': f'成功处理 {processed_count} 张图片，其中 {labeled_count} 张标注成功'
+        })
+        
+    except Exception as e:
+        import traceback
+        logging.error(f"AI label failed: {str(e)}")
+        
+        # 发送错误进度更新
+        progress_data = {
+            'task_type': 'ai_label',
+            'status': 'error',
+            'error': str(e),
+            'message': f'标注失败: {str(e)}'
+        }
+        socketio.emit('ai_label_progress', progress_data)
+        
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
 
 
 @app.route('/api/upload/video', methods=['POST'])
@@ -1123,7 +1285,7 @@ def get_annotations(image_name):
     annotations = {}
     if os.path.exists(ANNOTATIONS_FILE):
         try:
-            with open(ANNOTATIONS_FILE, 'r') as f:
+            with open(ANNOTATIONS_FILE, 'r', encoding='utf-8') as f:
                 annotations = json.load(f)
         except json.JSONDecodeError:
             # 如果JSON文件无效或为空，使用空字典
@@ -1145,7 +1307,7 @@ def save_annotations(image_name):
     annotations = {}
     if os.path.exists(ANNOTATIONS_FILE):
         try:
-            with open(ANNOTATIONS_FILE, 'r') as f:
+            with open(ANNOTATIONS_FILE, 'r', encoding='utf-8') as f:
                 annotations = json.load(f)
         except json.JSONDecodeError:
             # 如果JSON文件无效或为空，使用空字典
@@ -1157,8 +1319,8 @@ def save_annotations(image_name):
     
     annotations[image_name] = data
     
-    with open(ANNOTATIONS_FILE, 'w') as f:
-        json.dump(annotations, f, indent=2)
+    with open(ANNOTATIONS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(annotations, f, indent=2, ensure_ascii=False)
     
     return jsonify({'message': 'Annotations saved successfully'})
 
