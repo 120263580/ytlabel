@@ -610,14 +610,15 @@ body {
 .image-index {
     margin: 0;
     padding: 0;
-    width: 14px;
+    min-width: 20px;
     flex-shrink: 0;
     font-size: 0.7em;
     font-weight: normal;
     color: #6c757d;
-    text-align: left;
-    margin-right: 1px;
-    padding-right: 1px;
+    text-align: right;
+    margin-right: 8px;
+    padding-right: 2px;
+    white-space: nowrap;
 }
 
 .image-name {

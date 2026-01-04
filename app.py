@@ -23,7 +23,7 @@ app = Flask(__name__)
 CORS(app)
 
 # 应用版本号
-APP_VERSION = "v2.5"
+APP_VERSION = "v2.6"
 
 # 配置SocketIO
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
