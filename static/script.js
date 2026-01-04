@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿
 let currentImage = null;
 let currentAnnotations = [];
 let classes = [];
@@ -1131,14 +1131,12 @@ function clearCurrentAnnotations() {
         return;
     }
     
-    if (confirm(`确定要清除当前图片的 ${currentAnnotations.length} 个标注吗？`)) {
-        currentAnnotations = [];
-        selectedAnnotationId = null; // 重置选中状态
-        updateAnnotationListDebounced();
-        saveAnnotations();
-        redrawCanvas();
-        showToast('标注已清除');
-    }
+    currentAnnotations = [];
+    selectedAnnotationId = null; // 重置选中状态
+    updateAnnotationListDebounced();
+    saveAnnotations();
+    redrawCanvas();
+    showToast('标注已清除');
 }
 
 // 保存标注
@@ -1933,6 +1931,9 @@ function parseShortcut(shortcutStr) {
              key === 'arrowleft' ? 'ArrowLeft' :
              key === 'arrowright' ? 'ArrowRight' :
              key === 'space' ? ' ' :
+             key === 'esc' ? 'Escape' :
+             key === 'enter' ? 'Enter' :
+             key === 'backspace' ? 'Backspace' :
              key.charAt(0).toUpperCase() + key.slice(1),
         ctrlKey: parts.includes('ctrl'),
         shiftKey: parts.includes('shift'),
