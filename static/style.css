@@ -343,6 +343,29 @@ body {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
+    position: relative;
+    transition: width 0.2s ease;
+}
+
+/* 调整大小手柄 */
+.resize-handle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 5px;
+    height: 100%;
+    cursor: ew-resize;
+    background-color: transparent;
+    z-index: 10;
+}
+
+.resize-handle:hover {
+    background-color: #4facfe;
+}
+
+.resize-handle:active {
+    background-color: #00f2fe;
+    cursor: ew-resize;
 }
 
 .sidebar h3 {

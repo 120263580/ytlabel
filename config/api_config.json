@@ -1,8 +1,8 @@
 {
-  "inferenceTool": "阿里云大模型",
+  "inferenceTool": "HyperLPR",
   "model": "qwen3-omni-flash-2025-12-01",
-  "apiUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-  "apiKey": "",
+  "apiUrl": "http://192.168.1.13:9925/api/v1/rec",
+  "apiKey": "sk-942347f30fbb47a2b1c33dc673a42ef6",
   "timeout": "120",
   "prompt": "检测图中物体，返回JSON：{\"detections\":[{\"label\":\"类别\",\"confidence\":0.9,\"bbox\":[x1,y1,x2,y2]}]}"
 }
