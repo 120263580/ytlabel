@@ -1294,12 +1294,16 @@ def upload_video():
         return jsonify({'error': 'No video file selected'}), 400
     
     try:
-        # 保存视频文件到临时位置
-        temp_video_path = os.path.join(app.config['UPLOAD_FOLDER'], 'temp_' + (video_file.filename or 'video'))
+        # 保存视频文件到临时位置（使用固定 ASCII 文件名，避免 Windows 下 OpenCV 无法打开非 ASCII 路径）
+        original_filename = video_file.filename or 'video'
+        _, ext = os.path.splitext(original_filename)
+        if not ext:
+            ext = '.mp4'
+        temp_video_path = os.path.join(app.config['UPLOAD_FOLDER'], 'temp_video_input' + ext)
         video_file.save(temp_video_path)
-        
+
         # 抽帧处理，传递原始文件名
-        extracted_frames = extract_frames(temp_video_path, frame_interval, video_file.filename)
+        extracted_frames = extract_frames(temp_video_path, frame_interval, original_filename)
         
         # 删除临时视频文件
         os.remove(temp_video_path)
@@ -1338,10 +1342,13 @@ def extract_frames(video_path, frame_interval, original_filename=None):
             # 生成文件名
             frame_filename = f"{video_name}_frame_{saved_frame_count:06d}.jpg"
             frame_path = os.path.join(app.config['UPLOAD_FOLDER'], frame_filename)
-            
-            # 保存帧为图片
-            cv2.imwrite(frame_path, frame)
-            extracted_frames.append(frame_filename)
+
+            # 保存帧为图片（用 imencode + 二进制写入，兼容 Windows 下非 ASCII 文件名）
+            ok, buf = cv2.imencode('.jpg', frame)
+            if ok:
+                with open(frame_path, 'wb') as f:
+                    f.write(buf.tobytes())
+                extracted_frames.append(frame_filename)
             saved_frame_count += 1
             
         frame_count += 1
