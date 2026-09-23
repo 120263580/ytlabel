@@ -3120,7 +3120,12 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=int, default=9924, help='绑定的端口，默认9924')
     parser.add_argument('--debug', action='store_true', default=False, help='启用调试模式，默认关闭')
     args = parser.parse_args()
-    
+
+    # 打包/正式运行时自动打开默认浏览器（调试模式不开，避免干扰开发）
+    if not args.debug:
+        import webbrowser
+        threading.Timer(1.5, lambda: webbrowser.open(f'http://127.0.0.1:{args.port}')).start()
+
     # 使用SocketIO运行应用，使用命令行参数
     socketio.run(app, debug=args.debug, host=args.host, port=args.port, allow_unsafe_werkzeug=True)
 
