@@ -7,7 +7,6 @@ block_cipher = None
 datas = [
     ('templates', 'templates'),
     ('static', 'static'),
-    ('pre_models', 'pre_models'),
 ]
 
 # 动态导入的依赖，PyInstaller 静态分析容易漏掉，显式声明
@@ -15,7 +14,6 @@ hiddenimports = [
     'flask_socketio',
     'simple_websocket',
     'engineio.async_drivers.threading',
-    'socketio.async_drivers.threading',
     'flask_cors',
     'engineio',
     'socketio',
@@ -43,7 +41,8 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='xclabel',
+    name='ytlabel',
+    icon='logo.ico',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
