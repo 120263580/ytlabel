@@ -23,6 +23,8 @@ Open-source (MIT) image annotation tool: **standard annotation + keypoint annota
 
 Pose labels look like this (`v=2` = annotated, `0 0 0` = missing point, auto-padded):
 
+![keypoint annotation UI](docs/images/keypoint-ui.jpg)
+
 ```text
 0 0.312500 0.520833 0.312500 0.625000  0.312500 0.520833 2  0.312500 0.833333 2
 ```

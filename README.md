@@ -20,6 +20,8 @@
 
 ### 关键点标注怎么用
 
+![关键点标注界面](docs/images/keypoint-ui.jpg)
+
 1. 画一个矩形框，**点一下把它选中**（框变红）
 2. 右侧「关键点」面板里填点名，逗号分隔，例如 `center,stem`
 3. 「每个框点数」填一个数字（比如 `2`；填 `0` 表示不限、手动控制）
@@ -118,6 +120,8 @@ Flask + Flask-SocketIO ｜ HTML/CSS/JS ｜ OpenCV/PIL ｜ Socket.IO
 ---
 
 ## 版本历史
+
+> 完整记录见 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 本分支 v4.1-keypoint — 2026/11/16
 - 新增关键点标注：每框点数设定、画框自动进入、点满自动退回矩形工具、`K` 快捷键
