@@ -1,15 +1,44 @@
-# ytlabel
+# ytlabel (keypoint annotation fork)
 
 **Language / 语言：** [简体中文](README.md) | [English](README_en.md)
 
-Open-source (MIT) image annotation tool: **standard annotation + dataset export**. Built with Python + Flask, cross-platform on Windows / Linux / Mac. Model training is not part of this tool — use the dedicated trainer [ytstudio](https://github.com/yuturuishi/ytstudio).
+> **This repository is a personal fork of [yuturuishi/ytlabel](https://github.com/yuturuishi/ytlabel)**, based on v4.0, adding **keypoint annotation**, **switching the dataset directory at runtime**, and **YOLO pose export**. Upstream features, UI, and the MIT license are unchanged; copyright stays with the original author.
+
+Open-source (MIT) image annotation tool: **standard annotation + keypoint annotation + dataset export**. Built with Python + Flask, cross-platform on Windows / Linux / Mac. Model training is not part of this tool — use the dedicated trainer [ytstudio](https://github.com/yuturuishi/ytstudio).
 
 - Website: https://www.yuturuishi.com ｜ WeChat: yuturuishi
-- Gitee: https://gitee.com/yuturuishi/ytlabel ｜ GitHub: https://github.com/yuturuishi/ytlabel
+- Upstream: https://github.com/yuturuishi/ytlabel
 
 ---
 
-## Features
+## Changes in this fork
+
+| Feature | What it does | Where |
+|---|---|---|
+| **Keypoint annotation** | rectangle + keypoints (bbox + kpts); fixed keypoint count per box; auto-enters point mode after drawing a box, returns to the rectangle tool when full | right panel "关键点" / shortcut `K` |
+| **Dataset directory switching** | browse any directory (drive picker, go-up), one click "set as dataset"; annotations live in `<dir>/.ytlabel/` | top bar "文件管理" |
+| **Startup directory** | `--data-dir` flag or `YTLABEL_DATA_DIR` env var; the choice is remembered | CLI |
+| **YOLO pose export** | if any keypoint exists, export switches to pose format (`kpt_shape: [N, 3]`, labels `cls cx cy w h x y v ...`) | "导出数据集" |
+| **Absolute-path uploads** | uploading / creating folders also works after switching to an external directory | "文件管理" |
+
+Pose labels look like this (`v=2` = annotated, `0 0 0` = missing point, auto-padded):
+
+```text
+0 0.312500 0.520833 0.312500 0.625000  0.312500 0.520833 2  0.312500 0.833333 2
+```
+
+Train with ultralytics:
+
+```bash
+yolo pose train model=yolo11n-pose.pt data=<export_dir>/data.yaml epochs=100 imgsz=640 batch=4
+```
+
+> Keypoint order is semantic: point #1 must always be the same body part. Do not change the count/order mid-dataset.
+
+---
+
+## Features (upstream)
+
 
 - **Annotation**: multiple types (rectangle, polygon, etc.); import images, videos, and LabelMe datasets
 - **AI auto-labeling**: works with an LLM API you configure yourself (LMStudio, vLLM, ollama, Alibaba Cloud, etc.)
@@ -18,7 +47,7 @@ Open-source (MIT) image annotation tool: **standard annotation + dataset export*
 - **Offline deployment**: all static assets localized, runs on isolated intranets
 - **Model training**: not part of this tool — use [ytstudio](https://github.com/yuturuishi/ytstudio)
 
-**Shortcuts**: `Ctrl+S` save annotations ｜ `Ctrl+Shift+D` clear annotations
+**Shortcuts**: `Ctrl+S` save annotations ｜ `Ctrl+Shift+D` clear annotations ｜ `K` toggle keypoint mode
 
 ---
 
