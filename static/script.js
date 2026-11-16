@@ -12,6 +12,9 @@ let isResizing = false; // 是否正在调整大小
 let isMoving = false; // 是否正在移动标注
 let resizeHandle = null; // 当前调整大小的控制点
 let lastMousePos = null; // 上次鼠标位置
+let keypointMode = false; // 关键点标注模式
+let keypointNames = []; // 关键点名称列表（按顺序对应第 1、2、3 个点）
+let kptTargetCount = 0; // 每个框固定关键点数量（0 = 不限）
 let polygonPoints = []; // 多边形绘制时的顶点数组
 let isPolygonDrawing = false; // 是否正在绘制多边形
 let updateAnnotationListDebounced = debounce(updateAnnotationList, 100); // 防抖后的标注列表更新函数
@@ -168,6 +171,31 @@ function handleMouseDown(e) {
     // 计算鼠标在图片上的实际坐标
     const x = (canvasX - imgX) / ratio;
     const y = (canvasY - imgY) / ratio;
+    
+    // 关键点模式：已选中一个框时，点一下就在该框里落一个关键点
+    if (keypointMode && selectedAnnotationId !== null) {
+        const target = currentAnnotations.find(a => a.id === selectedAnnotationId);
+        if (target) {
+            if (!target.keypoints) target.keypoints = [];
+            if (kptTargetCount > 0 && target.keypoints.length >= kptTargetCount) {
+                showToast('这个框已经点满了（' + kptTargetCount + ' 个），去画下一个框');
+                return;
+            }
+            const kpName = keypointNames[target.keypoints.length] || ('p' + target.keypoints.length);
+            target.keypoints.push({name: kpName, x: x, y: y});
+            saveAnnotations();
+            updateAnnotationList();
+            updateKeypointPanel();
+            redrawCanvas();
+            // 点满自动回到矩形工具，方便连续作业
+            if (kptTargetCount > 0 && target.keypoints.length >= kptTargetCount) {
+                setKeypointMode(false, true);
+                switchTool('rect');
+                showToast('关键点已满 ' + kptTargetCount + ' 个，回到矩形工具');
+            }
+            return;
+        }
+    }
     
     // 检查是否点击了某个标注的控制点
     const resizeResult = checkResizeHandleClick(canvasX, canvasY, ratio, imgX, imgY);
@@ -468,8 +496,14 @@ function handleMouseUp(e) {
                     type: 'rectangle'
                 };
                 currentAnnotations.push(annotation);
+                selectedAnnotationId = annotation.id;
                 saveAnnotations();
                 updateAnnotationList();
+                // 设定了关键点数量时，画完框自动进入关键点模式
+                if (kptTargetCount > 0) {
+                    setKeypointMode(true, true);
+                    showToast('已画框，接着点 ' + kptTargetCount + ' 个关键点');
+                }
             }
         }
         isDrawing = false;
@@ -720,6 +754,24 @@ function drawAnnotation(ctx, annotation, scaleX = 1, scaleY = 1, offsetX = 0, of
         ctx.fillText(annotation.class, textX, textY);
     }
     
+    // 绘制关键点
+    if (annotation.keypoints && annotation.keypoints.length > 0) {
+        annotation.keypoints.forEach((kp, i) => {
+            const px = kp.x * scaleX + offsetX;
+            const py = kp.y * scaleY + offsetY;
+            ctx.beginPath();
+            ctx.arc(px, py, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#00e5ff';
+            ctx.fill();
+            ctx.strokeStyle = '#003a44';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#00e5ff';
+            ctx.fillText(kp.name || ('p' + i), px + 6, py - 6);
+        });
+    }
+
     // 如果是选中状态，绘制控制点
     if (isSelected && annotation.type === 'rectangle') {
         drawResizeHandles(ctx, annotation, scaleX, scaleY, offsetX, offsetY);
@@ -1067,6 +1119,7 @@ function loadAnnotations(imageName) {
 function updateAnnotationList() {
     const annotationList = document.getElementById('currentAnnotations');
     annotationList.innerHTML = '';
+    try { updateKeypointPanel(); } catch (e) { /* 关键点面板还没初始化 */ }
     
     currentAnnotations.forEach((annotation, index) => {
         const li = document.createElement('li');
@@ -1074,7 +1127,7 @@ function updateAnnotationList() {
         li.dataset.annotationId = annotation.id;
         li.innerHTML = `
             <div class="annotation-color" style="background-color: ${getClassColor(annotation.class)};"></div>
-            <span class="annotation-class">${annotation.class}</span>
+            <span class="annotation-class">${annotation.class}${(annotation.keypoints && annotation.keypoints.length) ? ` <span style="color:#00bcd4;font-size:11px;">·${annotation.keypoints.length}点</span>` : ''}</span>
             <div class="annotation-actions">
                 <button class="btn btn-small btn-danger delete-annotation-btn" data-index="${index}">
                     <i class="fas fa-trash"></i>
@@ -1104,6 +1157,110 @@ function updateAnnotationList() {
         }
     });
 }
+
+// ===================== 关键点 =====================
+function parseKeypointNames() {
+    const el = document.getElementById('keypointNames');
+    keypointNames = (el ? el.value : '').split(/[,，\s]+/).map(s => s.trim()).filter(Boolean);
+    return keypointNames;
+}
+
+function setKeypointMode(on, silent) {
+    keypointMode = !!on;
+    const btn = document.getElementById('keypointModeBtn');
+    if (btn) {
+        btn.innerHTML = keypointMode
+            ? '<i class="fas fa-crosshairs"></i> 关键点模式：开（点图落点，K 关闭）'
+            : '<i class="fas fa-crosshairs"></i> 启动关键点模式 (K)';
+        btn.style.background = keypointMode ? '#2b6cb0' : '';
+        btn.style.color = keypointMode ? '#fff' : '';
+    }
+    const canvas = document.getElementById('imageCanvas');
+    if (canvas) canvas.style.cursor = keypointMode ? 'crosshair' : 'default';
+    if (!silent) showToast(keypointMode ? '关键点模式已开：先选中框，再点图上位置' : '关键点模式已关');
+}
+
+function toggleKeypointMode() {
+    setKeypointMode(!keypointMode);
+}
+
+function readKptTarget() {
+    const el = document.getElementById('kptTarget');
+    const v = parseInt(el ? el.value : '0', 10);
+    kptTargetCount = (isNaN(v) || v < 0) ? 0 : v;
+    updateKptProgress();
+    return kptTargetCount;
+}
+
+function updateKptProgress() {
+    const el = document.getElementById('kptProgress');
+    if (!el) return;
+    const target = currentAnnotations.find(a => a.id === selectedAnnotationId);
+    const have = target ? (target.keypoints || []).length : 0;
+    if (!target) {
+        el.textContent = kptTargetCount > 0 ? ('每框 ' + kptTargetCount + ' 个点') : '不限';
+        return;
+    }
+    el.textContent = kptTargetCount > 0
+        ? ('当前框 ' + have + ' / ' + kptTargetCount)
+        : ('当前框 ' + have + ' 个');
+}
+
+function updateKeypointPanel() {
+    const list = document.getElementById('keypointList');
+    updateKptProgress();
+    if (!list) return;
+    list.innerHTML = '';
+    const target = currentAnnotations.find(a => a.id === selectedAnnotationId);
+    if (!target) {
+        list.innerHTML = '<li style="color:#a0aec0;font-size:12px;padding:4px 0;">未选中框</li>';
+        return;
+    }
+    const kps = target.keypoints || [];
+    if (!kps.length) {
+        list.innerHTML = '<li style="color:#a0aec0;font-size:12px;padding:4px 0;">这个框还没有关键点</li>';
+        return;
+    }
+    kps.forEach(function(kp, i) {
+        const li = document.createElement('li');
+        li.className = 'annotation-item';
+        li.innerHTML = '<div class="annotation-color" style="background:#00e5ff;"></div>' +
+            '<span class="annotation-class">' + (kp.name || ('p' + i)) + '</span>' +
+            '<div class="annotation-actions"><button class="btn btn-small btn-danger"><i class="fas fa-trash"></i></button></div>';
+        li.querySelector('button').addEventListener('click', function(e) {
+            e.stopPropagation();
+            target.keypoints.splice(i, 1);
+            saveAnnotations();
+            updateKeypointPanel();
+            updateAnnotationList();
+            redrawCanvas();
+        });
+        list.appendChild(li);
+    });
+}
+
+function initKeypointUI() {
+    const names = document.getElementById('keypointNames');
+    if (names) {
+        names.addEventListener('input', parseKeypointNames);
+        parseKeypointNames();
+    }
+    const target = document.getElementById('kptTarget');
+    if (target) {
+        target.addEventListener('input', readKptTarget);
+        readKptTarget();
+    }
+    const btn = document.getElementById('keypointModeBtn');
+    if (btn) btn.addEventListener('click', toggleKeypointMode);
+    document.addEventListener('keydown', function(e) {
+        if (e.key !== 'k' && e.key !== 'K') return;
+        const tag = document.activeElement ? document.activeElement.tagName : '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        toggleKeypointMode();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initKeypointUI);
 
 // 获取类别颜色
 function getClassColor(className) {
@@ -1590,6 +1747,21 @@ function setupDatasetUploadEvents() {
         selectFolderBtn.addEventListener('click', function() {
             folderInput.click();
         });
+
+        // 单选/多选图片：挑完塞进 folderInput，复用同一套上传流程
+        const selectFilesBtn = document.getElementById('selectFilesBtn');
+        const filesOnlyInput = document.getElementById('filesOnlyInput');
+        if (selectFilesBtn && filesOnlyInput) {
+            selectFilesBtn.addEventListener('click', function() {
+                filesOnlyInput.click();
+            });
+            filesOnlyInput.addEventListener('change', function() {
+                const dt = new DataTransfer();
+                Array.from(filesOnlyInput.files).forEach(function(f) { dt.items.add(f); });
+                folderInput.files = dt.files;
+                folderInput.dispatchEvent(new Event('change'));
+            });
+        }
         
         folderInput.addEventListener('change', function(e) {
             // 处理选中的图片文件
@@ -1617,54 +1789,72 @@ function setupDatasetUploadEvents() {
             }
         });
         
-        // 上传图片按钮事件
+        // 上传图片按钮事件（分批上传，避免单次请求过大被服务端 413 拒绝）
         uploadImagesBtn.addEventListener('click', function() {
             const files = Array.from(folderInput.files);
             if (files.length === 0) {
                 showToast('请先选择图片文件');
                 return;
             }
-            
-            // 显示上传中状态
+
+            // 每批最多 100 张 / 150MB（服务端上限 2GB，留足余量）
+            const MAX_FILES = 100;
+            const MAX_BYTES = 150 * 1024 * 1024;
+            const batches = [];
+            let cur = [];
+            let curBytes = 0;
+            files.forEach(function(file) {
+                if (cur.length > 0 && (cur.length >= MAX_FILES || curBytes + file.size > MAX_BYTES)) {
+                    batches.push(cur);
+                    cur = [];
+                    curBytes = 0;
+                }
+                cur.push(file);
+                curBytes += file.size;
+            });
+            if (cur.length > 0) batches.push(cur);
+
+            let uploaded = 0;
             uploadImagesBtn.disabled = true;
-            uploadImagesBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上传中...';
-            
-            // 创建FormData对象，用于发送文件
-            const formData = new FormData();
-            files.forEach(file => {
-                formData.append('files[]', file, file.name);
-            });
-            
-            // 发送真实的文件上传请求
-            fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                // 重置按钮状态
-                uploadImagesBtn.innerHTML = '<i class="fas fa-upload"></i> 上传图片到数据集';
-                uploadImagesBtn.disabled = false;
-                
-                // 显示成功提示
-                showToast(`成功上传 ${files.length} 张图片`);
-                
-                // 关闭模态框
-                document.getElementById('datasetModal').style.display = 'none';
-                
-                // 重新加载图片列表
-                loadImages();
-            })
-            .catch(error => {
-                console.error('上传失败:', error);
-                
-                // 重置按钮状态
-                uploadImagesBtn.innerHTML = '<i class="fas fa-upload"></i> 上传图片到数据集';
-                uploadImagesBtn.disabled = false;
-                
-                // 显示错误提示
-                showToast('上传失败，请重试');
-            });
+
+            const sendBatch = function(idx) {
+                if (idx >= batches.length) {
+                    uploadImagesBtn.innerHTML = '<i class="fas fa-upload"></i> 上传图片到数据集';
+                    uploadImagesBtn.disabled = false;
+                    showToast(`成功上传 ${uploaded} 张图片`);
+                    document.getElementById('datasetModal').style.display = 'none';
+                    loadImages();
+                    return;
+                }
+                const formData = new FormData();
+                batches[idx].forEach(function(file) {
+                    formData.append('files[]', file, file.name);
+                });
+                uploadImagesBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上传中 ' + (idx + 1) + '/' + batches.length + ' 批';
+                fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(function(response) {
+                    return response.json().catch(function() {
+                        throw new Error('服务端返回 ' + response.status);
+                    });
+                })
+                .then(function(data) {
+                    if (data && data.error) throw new Error(data.error);
+                    uploaded += batches[idx].length;
+                    sendBatch(idx + 1);
+                })
+                .catch(function(error) {
+                    console.error('上传失败:', error);
+                    uploadImagesBtn.innerHTML = '<i class="fas fa-upload"></i> 上传图片到数据集';
+                    uploadImagesBtn.disabled = false;
+                    showToast('上传失败：' + (error && error.message ? error.message : '请重试'));
+                    if (uploaded > 0) loadImages();
+                });
+            };
+
+            sendBatch(0);
         });
     }
     

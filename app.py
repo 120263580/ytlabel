@@ -1,4 +1,4 @@
-﻿import os
+import os
 import json
 import math
 import numpy as np
@@ -22,7 +22,15 @@ import argparse
 app = Flask(__name__)
 CORS(app)
 
-app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
+# 单次请求体上限（前端按 100 张 / 150MB 分批上传，这里留足余量；可用环境变量调整）
+app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('YTLABEL_MAX_UPLOAD_MB', '2048')) * 1024 * 1024
+
+
+@app.errorhandler(413)
+def _payload_too_large(e):
+    """上传体积超限时返回 JSON，前端才能显示人话而不是解析 HTML 报错。"""
+    limit_mb = int(os.environ.get('YTLABEL_MAX_UPLOAD_MB', '2048'))
+    return jsonify({'error': f'这批文件太大（单次上限 {limit_mb}MB），请分批上传'}), 413
 
 # 应用版本号
 APP_VERSION = "v4.0"
@@ -287,9 +295,32 @@ def resource_path(rel):
 
 # 可写数据目录：打包后放在 exe 所在目录（数据可持久化），源码运行时用当前工作目录
 BASE_PATH = os.path.dirname(sys.executable) if FROZEN else os.getcwd()
-UPLOAD_FOLDER = os.path.join(BASE_PATH, 'uploads', 'samples')
+
+
+def _cli_arg(flag):
+    """从命令行取参数值（支持 --flag value 和 --flag=value 两种写法）。"""
+    if flag in sys.argv:
+        i = sys.argv.index(flag)
+        if i + 1 < len(sys.argv):
+            return sys.argv[i + 1]
+    for a in sys.argv:
+        if a.startswith(flag + '='):
+            return a.split('=', 1)[1]
+    return None
+
+
+# 数据集目录：默认 uploads/samples；可用 --data-dir 或环境变量 YTLABEL_DATA_DIR 指到任意文件夹
+DATA_DIR = (_cli_arg('--data-dir') or os.environ.get('YTLABEL_DATA_DIR') or '').strip()
+
+if DATA_DIR:
+    UPLOAD_FOLDER = os.path.abspath(DATA_DIR)
+    # 标注跟着数据集走，避免多个数据集共用一份 annotations.json 互相串
+    ANNOTATIONS_FOLDER = os.path.join(UPLOAD_FOLDER, '.ytlabel')
+else:
+    UPLOAD_FOLDER = os.path.join(BASE_PATH, 'uploads', 'samples')
+    ANNOTATIONS_FOLDER = os.path.join(BASE_PATH, 'uploads', 'annotations')
+
 STATIC_FOLDER = os.path.join(BASE_PATH, 'static')
-ANNOTATIONS_FOLDER = os.path.join(BASE_PATH, 'uploads', 'annotations')
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['STATIC_FOLDER'] = STATIC_FOLDER
@@ -318,6 +349,78 @@ if not os.path.exists(CLASSES_FILE):
         json.dump(default_classes, f)
 
 
+# ==================== 数据集目录切换 ====================
+ACTIVE_DATASET_FILE = os.path.join(BASE_PATH, 'uploads', 'active_dataset.json')
+
+
+def _is_abs_path(p):
+    return bool(__import__('re').match(r'^[A-Za-z]:[\\/]', p)) or p.startswith('\\\\')
+
+
+def _resolve_fs_path(path):
+    """把前端传来的路径解析成绝对路径：绝对路径直接用，相对路径挂在 BASE_PATH 下。"""
+    p = (path or '').strip()
+    if not p:
+        return os.path.join(BASE_PATH, 'uploads')
+    if _is_abs_path(p):
+        return os.path.abspath(p)
+    if '..' in p or p.startswith('/') or p.startswith('\\'):
+        raise ValueError('invalid path')
+    return os.path.join(BASE_PATH, p)
+
+
+def _apply_dataset_dir(path):
+    """切换图片目录 + 标注目录（标注存在 <目录>/.ytlabel 下），并记住这次选择。"""
+    global UPLOAD_FOLDER, ANNOTATIONS_FOLDER, ANNOTATIONS_FILE, CLASSES_FILE
+    d = os.path.abspath(path)
+    if not os.path.isdir(d):
+        raise ValueError('目录不存在')
+    # 内置默认数据集仍用原来的 uploads\annotations，避免历史标注“失联”
+    if os.path.normcase(d) == os.path.normcase(os.path.join(BASE_PATH, 'uploads', 'samples')):
+        ann = os.path.join(BASE_PATH, 'uploads', 'annotations')
+    else:
+        ann = os.path.join(d, '.ytlabel')
+    os.makedirs(ann, exist_ok=True)
+
+    UPLOAD_FOLDER = d
+    ANNOTATIONS_FOLDER = ann
+    ANNOTATIONS_FILE = os.path.join(ann, 'annotations.json')
+    CLASSES_FILE = os.path.join(ann, 'classes.json')
+    app.config['UPLOAD_FOLDER'] = d
+    app.config['ANNOTATIONS_FOLDER'] = ann
+
+    if not os.path.exists(ANNOTATIONS_FILE):
+        with open(ANNOTATIONS_FILE, 'w', encoding='utf-8') as f:
+            json.dump({}, f)
+    if not os.path.exists(CLASSES_FILE):
+        with open(CLASSES_FILE, 'w', encoding='utf-8') as f:
+            json.dump([{'name': 'person', 'color': '#3aa757'}], f)
+
+    try:
+        with open(ACTIVE_DATASET_FILE, 'w', encoding='utf-8') as f:
+            json.dump({'path': d}, f)
+    except Exception:
+        pass
+    return d
+
+
+def _restore_dataset_dir():
+    """启动时恢复上次选择的数据集目录（命令行 --data-dir 优先级更高，已处理过就不覆盖）。"""
+    if DATA_DIR:
+        return
+    try:
+        if os.path.exists(ACTIVE_DATASET_FILE):
+            saved = json.load(open(ACTIVE_DATASET_FILE, encoding='utf-8')).get('path')
+            if saved and os.path.isdir(saved):
+                _apply_dataset_dir(saved)
+    except Exception:
+        pass
+
+
+_restore_dataset_dir()
+
+
+
 @app.route('/')
 def index():
     return render_template('index.html', version=APP_VERSION)
@@ -332,6 +435,34 @@ def file_manager():
     """文件管理页面"""
     return render_template('file_manager.html', version=APP_VERSION)
 
+@app.route('/api/drives')
+def api_drives():
+    """列出本机盘符，供文件管理页跳转。"""
+    import string
+    drives = [f'{d}:\\' for d in string.ascii_uppercase if os.path.exists(f'{d}:\\')]
+    return jsonify({'drives': drives})
+
+
+@app.route('/api/set-dataset-dir', methods=['POST'])
+def api_set_dataset_dir():
+    """把某个目录设为当前数据集（图片目录 + 标注目录跟着走）。"""
+    data = request.json or {}
+    raw = (data.get('path') or '').strip()
+    try:
+        target = _resolve_fs_path(raw)
+    except ValueError:
+        return jsonify({'ok': False, 'error': '无效路径'}), 400
+    if not os.path.isdir(target):
+        return jsonify({'ok': False, 'error': f'目录不存在：{target}'}), 400
+    try:
+        d = _apply_dataset_dir(target)
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+    exts = ('.png', '.jpg', '.jpeg', '.bmp')
+    count = len([f for f in os.listdir(d) if f.lower().endswith(exts)])
+    return jsonify({'ok': True, 'path': d, 'images': count})
+
+
 @app.route('/api/files')
 def get_files():
     """获取指定路径下的文件列表"""
@@ -341,17 +472,15 @@ def get_files():
     
     # 获取请求参数
     path = request.args.get('path', 'uploads')
-    
-    # 安全检查，防止路径遍历攻击
-    if '..' in path or path.startswith('/'):
+
+    # 解析路径：允许绝对路径（如 C:/data/xhl2），相对路径仍限制在 BASE_PATH 下
+    try:
+        full_path = _resolve_fs_path(path)
+    except ValueError:
         return jsonify({
             'success': False,
             'error': 'Invalid path'
         }), 400
-    
-    # 构建完整路径，统一使用 BASE_PATH（打包后为 exe 所在目录）
-    base_path = BASE_PATH
-    full_path = os.path.join(base_path, path)
     
     # 检查路径是否存在
     if not os.path.exists(full_path):
@@ -368,6 +497,7 @@ def get_files():
         }), 400
     
     # 获取目录下的所有项目
+    base_path = BASE_PATH
     items = os.listdir(full_path)
     files = []
     
@@ -375,7 +505,7 @@ def get_files():
         item_path = os.path.join(full_path, item)
         item_info = {
                 'name': item,
-                'path': os.path.join(path, item).replace('\\', '/'),
+                'path': os.path.join(path, item).replace('\\', '/') if _is_abs_path(path) or path.startswith('uploads') else os.path.join(path, item).replace('\\', '/'),
                 'relativePath': os.path.relpath(item_path, os.path.join(base_path, 'uploads')).replace('\\', '/') if path.startswith('uploads') else None
             }
         
@@ -646,8 +776,15 @@ def create_folder():
             'error': '缺少必要参数'
         }), 400
     
-    # 安全检查，防止路径遍历攻击
-    if '..' in path or path.startswith('/') or '..' in folder_name or folder_name.startswith('/'):
+    # 安全检查：支持绝对路径，但拒绝 .. 与非法文件夹名
+    if '..' in folder_name or folder_name.startswith('/') or folder_name.startswith('\\'):
+        return jsonify({
+            'success': False,
+            'error': '无效的路径或文件夹名称'
+        }), 400
+    try:
+        base_dir = _resolve_fs_path(path)
+    except ValueError:
         return jsonify({
             'success': False,
             'error': '无效的路径或文件夹名称'
@@ -655,7 +792,7 @@ def create_folder():
     
     try:
         # 构建完整的文件夹路径
-        full_path = os.path.join(BASE_PATH, path, folder_name)
+        full_path = os.path.join(base_dir, folder_name)
         
         # 检查文件夹是否已存在
         if os.path.exists(full_path):
@@ -682,11 +819,11 @@ def create_folder():
 def upload_files():
     """上传文件"""
     try:
-        # 获取路径参数
+        # 获取路径参数（支持绝对路径）
         path = request.form.get('path', 'uploads')
-        
-        # 安全检查，防止路径遍历攻击
-        if '..' in path or path.startswith('/'):
+        try:
+            upload_dir = _resolve_fs_path(path)
+        except ValueError:
             return jsonify({
                 'success': False,
                 'error': '无效的路径'
@@ -699,9 +836,6 @@ def upload_files():
                 'success': False,
                 'error': '没有选择要上传的文件'
             }), 400
-        
-        # 构建上传目录路径
-        upload_dir = os.path.join(BASE_PATH, path)
         
         # 确保上传目录存在
         os.makedirs(upload_dir, exist_ok=True)
@@ -902,9 +1036,13 @@ def upload_folder():
     
     for file in files:
         if file.filename != '':
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename or '')
+            # webkitdirectory 上传时文件名可能带相对路径，只取最后一段，避免写出子目录
+            name = (file.filename or '').replace('\\', '/').split('/')[-1]
+            if not name or not name.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
+                continue
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], name)
             file.save(filepath)
-            uploaded_files.append(file.filename or '')
+            uploaded_files.append(name)
     
     return jsonify({'message': 'Files uploaded successfully', 'files': uploaded_files})
 
@@ -1863,6 +2001,29 @@ def export_dataset():
             ('test', test_images)
         ]
         
+        # 判断要不要按 YOLO pose 格式导出（任何一张图上有 >=1 个关键点就按 pose 导出）
+        pose_kpt_count = 0
+        for _img in images:
+            for _ann in annotations.get(_img, []):
+                if _ann.get('class') in selected_classes:
+                    pose_kpt_count = max(pose_kpt_count, len(_ann.get('keypoints') or []))
+
+        def _kpt_suffix(ann, img_w, img_h, n):
+            """YOLO pose 标签：每个关键点 3 个数 (x, y, v)；没有的点补 0 0 0。"""
+            if not n:
+                return ''
+            kps = ann.get('keypoints') or []
+            out = []
+            for k in range(n):
+                kp = kps[k] if k < len(kps) else None
+                if isinstance(kp, dict) and kp.get('x') is not None and kp.get('y') is not None:
+                    kx = min(1.0, max(0.0, float(kp['x']) / img_w))
+                    ky = min(1.0, max(0.0, float(kp['y']) / img_h))
+                    out.append(f' {kx:.6f} {ky:.6f} 2')
+                else:
+                    out.append(' 0.000000 0.000000 0')
+            return ''.join(out)
+
         # 创建数据集配置文件 (YOLOv11格式)
         data_yaml = f"""path: .
 train: train/images
@@ -1872,6 +2033,8 @@ test: test/images
 nc: {len(selected_classes)}
 names: {selected_classes}
 """
+        if pose_kpt_count:
+            data_yaml += f"kpt_shape: [{pose_kpt_count}, 3]\n"
         
         with open(os.path.join(yolo_base, 'data.yaml'), 'w') as f:
             f.write(data_yaml)
@@ -1958,7 +2121,7 @@ names: {selected_classes}
                                                 bbox_width = (x_max - x_min) / width
                                                 bbox_height = (y_max - y_min) / height
                                                 
-                                                f.write(f"{class_id} {center_x:.6f} {center_y:.6f} {bbox_width:.6f} {bbox_height:.6f}\n")
+                                                f.write(f"{class_id} {center_x:.6f} {center_y:.6f} {bbox_width:.6f} {bbox_height:.6f}{_kpt_suffix(ann, width, height, pose_kpt_count)}\n")
                                     elif 'x' in ann and 'y' in ann and 'width' in ann and 'height' in ann:
                                         # 处理矩形格式的标注数据
                                         x = ann['x']
@@ -1979,7 +2142,7 @@ names: {selected_classes}
                                             bbox_width = (x_max - x_min) / width
                                             bbox_height = (y_max - y_min) / height
                                             
-                                            f.write(f"{class_id} {center_x:.6f} {center_y:.6f} {bbox_width:.6f} {bbox_height:.6f}\n")
+                                            f.write(f"{class_id} {center_x:.6f} {center_y:.6f} {bbox_width:.6f} {bbox_height:.6f}{_kpt_suffix(ann, width, height, pose_kpt_count)}\n")
                                     else:
                                         # points数据格式无效，跳过该标注
                                         print(f"Invalid points data for annotation: {ann}")
@@ -2154,7 +2317,11 @@ if __name__ == '__main__':
     parser.add_argument('--host', type=str, default='0.0.0.0', help='绑定的IP地址，默认0.0.0.0')
     parser.add_argument('--port', type=int, default=9924, help='绑定的端口，默认9924')
     parser.add_argument('--debug', action='store_true', default=False, help='启用调试模式，默认关闭')
+    parser.add_argument('--data-dir', type=str, default=None, help='数据集图片目录（默认 uploads/samples），标注存在该目录下的 .ytlabel 里')
     args = parser.parse_args()
+
+    print(f'[ytlabel] data dir    : {UPLOAD_FOLDER}')
+    print(f'[ytlabel] annotations : {ANNOTATIONS_FOLDER}')
 
     # 打包/正式运行时自动打开默认浏览器（调试模式不开，避免干扰开发）
     if not args.debug:

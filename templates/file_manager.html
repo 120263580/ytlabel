@@ -640,11 +640,18 @@
                 <div class="path-nav">
                     <label for="currentPath">当前路径:</label>
                     <input type="text" id="currentPath" class="path-input" value="uploads" readonly>
+                    <select id="driveSelect" style="max-width:110px;padding:6px;border-radius:6px;border:1px solid #cbd5e0;"></select>
+                    <button class="btn btn-secondary" onclick="openSelectedDrive()">
+                        <i class="fas fa-hdd"></i> 打开盘符
+                    </button>
                     <button class="btn btn-primary" onclick="refreshFiles()">
                         <i class="fas fa-sync-alt"></i> 刷新
                     </button>
                     <button class="btn btn-secondary" onclick="goUp()">
                         <i class="fas fa-level-up-alt"></i> 上级目录
+                    </button>
+                    <button class="btn btn-success" onclick="setAsDataset()">
+                        <i class="fas fa-check"></i> 设为数据集
                     </button>
                 </div>
                 
@@ -755,6 +762,8 @@
             
             // 加载初始路径的文件
             loadFiles(currentPath);
+            // 盘符下拉
+            loadDrives();
         });
         
         // 打开模态框
@@ -1136,12 +1145,45 @@
             if (currentPath === 'uploads' || currentPath === 'output') {
                 return; // 已经是根目录
             }
-            
-            // 处理Windows和Linux的路径分隔符
-            const separator = currentPath.includes('\\') ? '\\' : '/';
-            // 分割路径并获取父路径
-            const parentPath = currentPath.split(separator).slice(0, -1).join('/') || 'uploads';
-            loadFiles(parentPath);
+            const norm = String(currentPath).replace(/\\/g, '/').replace(/\/+$/, '');
+            if (/^[A-Za-z]:$/.test(norm)) return; // 已是盘符根
+            const parent = norm.split('/').slice(0, -1).join('/');
+            if (!parent) return;
+            loadFiles(/^[A-Za-z]:$/.test(parent) ? parent + '/' : parent);
+        }
+
+        // 盘符下拉
+        function loadDrives() {
+            fetch('/api/drives').then(r => r.json()).then(d => {
+                const sel = document.getElementById('driveSelect');
+                if (!sel) return;
+                sel.innerHTML = '';
+                (d.drives || []).forEach(v => {
+                    const o = document.createElement('option');
+                    o.value = v; o.textContent = v;
+                    sel.appendChild(o);
+                });
+                sel.value = 'C:\\';
+            }).catch(() => {});
+        }
+
+        function openSelectedDrive() {
+            const sel = document.getElementById('driveSelect');
+            if (sel && sel.value) loadFiles(sel.value);
+        }
+
+        // 把当前目录设为数据集（图片目录 + 标注目录跟着走）
+        function setAsDataset() {
+            if (!confirm('把当前目录设为数据集？\n' + currentPath + '\n\n该目录下的图片会作为数据集，标注保存在它的 .ytlabel 子目录里。')) return;
+            fetch('/api/set-dataset-dir', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({path: currentPath})
+            }).then(r => r.json()).then(d => {
+                if (!d.ok) { alert('切换失败：' + (d.error || '未知错误')); return; }
+                alert('已切换数据集\n' + d.path + '\n图片 ' + d.images + ' 张');
+                window.location.href = '/';
+            }).catch(e => alert('切换失败：' + e));
         }
         
         // 全选/取消全选功能
